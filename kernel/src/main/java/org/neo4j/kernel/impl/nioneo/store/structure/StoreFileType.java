@@ -21,24 +21,28 @@ package org.neo4j.kernel.impl.nioneo.store.structure;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
 
-public class StoreFileHierarchy
+public class StoreFileType
 {
-    void createStore( File rootFile, HashMap<Object, Object> config ) throws IOException
+    private String fileNamePart;
+    private StoreFileType[] childStoreTypes;
+
+    public StoreFileType( String fileNamePart, StoreFileType... childStoreTypes )
     {
-        root.createFiles( rootFile );
+        this.fileNamePart = fileNamePart;
+        this.childStoreTypes = childStoreTypes;
     }
 
-    static StoreFileType root = new StoreFileType( "neostore",
-            new StoreFileType( "propertystore.db",
-                    new StoreFileType( "arrays" ),
-                    new StoreFileType( "strings" ),
-                    new StoreFileType( "index",
-                            new StoreFileType( "keys" ) ) ),
-            new StoreFileType( "relationshipstore.db" ),
-            new StoreFileType( "relationshiptypestore.db",
-                    new StoreFileType( "names" )),
-            new StoreFileType( "nodestore.db" ) );
+    public void createFiles( File rootFile ) throws IOException
+    {
+        File storeFile = rootFile.isDirectory() ?
+                new File( rootFile, fileNamePart ) :
+                new File( rootFile.getPath() + "." + fileNamePart );
+        storeFile.createNewFile();
 
+        for ( StoreFileType childStoreType : childStoreTypes )
+        {
+            childStoreType.createFiles( storeFile );
+        }
+    }
 }
