@@ -25,6 +25,7 @@ import java.util.Map;
 
 import org.neo4j.kernel.IdGeneratorFactory;
 import org.neo4j.kernel.IdType;
+import org.neo4j.kernel.impl.nioneo.store.structure.StoreFileType;
 import org.neo4j.kernel.impl.util.StringLogger;
 
 /**
@@ -54,26 +55,19 @@ public class NodeStore extends AbstractStore implements Store
         return RECORD_SIZE;
     }
 
-    /**
-     * Creates a new node store contained in <CODE>fileName</CODE> If filename
-     * is <CODE>null</CODE> or the file already exists an
-     * <CODE>IOException</CODE> is thrown.
-     *
-     * @param fileName
-     *            File name of the new node store
-     * @param config
-     *            Map of configuration parameters
-     */
-    public static void createStore( String fileName, Map<?, ?> config )
-    {
-        IdGeneratorFactory idGeneratorFactory = (IdGeneratorFactory) config.get(
-                IdGeneratorFactory.class );
-        createEmptyStore( fileName, buildTypeDescriptorAndVersion( TYPE_DESCRIPTOR ), idGeneratorFactory );
-        NodeStore store = new NodeStore( fileName, config );
-        NodeRecord nodeRecord = new NodeRecord( store.nextId() );
-        nodeRecord.setInUse( true );
-        store.updateRecord( nodeRecord );
-        store.close();
+    public static class Creator implements StoreFileType.StoreCreator {
+
+        public void create( String fileName, Map<?, ?> config )
+        {
+            IdGeneratorFactory idGeneratorFactory = (IdGeneratorFactory) config.get(
+                    IdGeneratorFactory.class );
+            createEmptyStore( fileName, buildTypeDescriptorAndVersion( TYPE_DESCRIPTOR ), idGeneratorFactory );
+            NodeStore store = new NodeStore( fileName, config );
+            NodeRecord nodeRecord = new NodeRecord( store.nextId() );
+            nodeRecord.setInUse( true );
+            store.updateRecord( nodeRecord );
+            store.close();
+        }
     }
 
     public NodeRecord getRecord( long id )

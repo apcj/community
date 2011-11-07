@@ -35,6 +35,7 @@ import org.neo4j.kernel.impl.nioneo.store.PropertyRecord;
 import org.neo4j.kernel.impl.nioneo.store.PropertyStore;
 import org.neo4j.kernel.impl.nioneo.store.PropertyType;
 import org.neo4j.kernel.impl.nioneo.store.Record;
+import org.neo4j.kernel.impl.nioneo.store.structure.StoreFileType;
 import org.neo4j.kernel.impl.util.FileUtils;
 
 public class PropertyWriterTest
@@ -48,7 +49,7 @@ public class PropertyWriterTest
         assertTrue( outputDir.mkdirs() );
 
         File propertyStoreFile = new File( outputDir, "neostore.propertystore.db" );
-        PropertyStore.createStore( propertyStoreFile.getPath(), config );
+        StoreFileType.PropertyStore.createStore( propertyStoreFile.getPath(), config );
         PropertyStore propertyStore = new PropertyStore( propertyStoreFile.getPath(), config );
 
         assertEquals( 0, propertyStore.getHighId() );
@@ -81,7 +82,7 @@ public class PropertyWriterTest
         assertTrue( outputDir.mkdirs() );
 
         File propertyStoreFile = new File( outputDir, "neostore.propertystore.db" );
-        PropertyStore.createStore( propertyStoreFile.getPath(), config );
+        StoreFileType.PropertyStore.createStore( propertyStoreFile.getPath(), config );
         PropertyStore propertyStore = new PropertyStore( propertyStoreFile.getPath(), config );
 
         assertEquals( 0, propertyStore.getHighId() );

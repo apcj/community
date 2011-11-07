@@ -47,6 +47,7 @@ import org.neo4j.kernel.impl.nioneo.store.PropertyStore;
 import org.neo4j.kernel.impl.nioneo.store.Store;
 import org.neo4j.kernel.impl.nioneo.store.StoreId;
 import org.neo4j.kernel.impl.nioneo.store.WindowPoolStats;
+import org.neo4j.kernel.impl.nioneo.store.structure.StoreFileType;
 import org.neo4j.kernel.impl.persistence.IdGenerationFailedException;
 import org.neo4j.kernel.impl.transaction.LockManager;
 import org.neo4j.kernel.impl.transaction.xaframework.LogBackedXaDataSource;
@@ -131,7 +132,7 @@ public class NeoStoreXaDataSource extends LogBackedXaDataSource
         {
             msgLog.logMessage( "Creating new db @ " + store, true );
             autoCreatePath( store );
-            NeoStore.createStore( store, config );
+            StoreFileType.NeoStore.createStore( store, config );
         }
 
         neoStore = new NeoStore( config );

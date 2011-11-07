@@ -32,6 +32,7 @@ import java.util.Map;
 
 import org.neo4j.kernel.IdGeneratorFactory;
 import org.neo4j.kernel.IdType;
+import org.neo4j.kernel.impl.nioneo.store.structure.StoreFileType;
 import org.neo4j.kernel.impl.util.StringLogger;
 
 /**
@@ -105,26 +106,18 @@ public class RelationshipTypeStore extends AbstractStore implements Store
         return RECORD_SIZE;
     }
 
-    /**
-     * Creates a new relationship type store contained in <CODE>fileName</CODE>
-     * If filename is <CODE>null</CODE> or the file already exists an
-     * <CODE>IOException</CODE> is thrown.
-     *
-     * @param fileName
-     *            File name of the new relationship type store
-     * @throws IOException
-     *             If unable to create store or name null
-     */
-    public static void createStore( String fileName, Map<?, ?> config )
+    public static class Creator implements StoreFileType.StoreCreator
     {
-        IdGeneratorFactory idGeneratorFactory = (IdGeneratorFactory) config.get(
-                IdGeneratorFactory.class );
-        createEmptyStore( fileName, buildTypeDescriptorAndVersion( TYPE_DESCRIPTOR ), idGeneratorFactory );
-        DynamicStringStore.createStore( fileName + ".names",
-            TYPE_STORE_BLOCK_SIZE, idGeneratorFactory, IdType.RELATIONSHIP_TYPE_BLOCK );
-        RelationshipTypeStore store = new RelationshipTypeStore(
-                fileName, config, IdType.RELATIONSHIP_TYPE );
-        store.close();
+        @Override
+        public void create( String fileName, Map<?, ?> config )
+        {
+            IdGeneratorFactory idGeneratorFactory = (IdGeneratorFactory) config.get(
+                    IdGeneratorFactory.class );
+            createEmptyStore( fileName, buildTypeDescriptorAndVersion( TYPE_DESCRIPTOR ), idGeneratorFactory );
+            RelationshipTypeStore store = new RelationshipTypeStore(
+                    fileName, config, IdType.RELATIONSHIP_TYPE );
+            store.close();
+        }
     }
 
     void markAsReserved( int id )

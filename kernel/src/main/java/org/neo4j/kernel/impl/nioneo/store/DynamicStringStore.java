@@ -19,10 +19,14 @@
  */
 package org.neo4j.kernel.impl.nioneo.store;
 
+import static org.neo4j.kernel.Config.ARRAY_BLOCK_SIZE;
+import static org.neo4j.kernel.Config.STRING_BLOCK_SIZE;
+
 import java.util.Map;
 
 import org.neo4j.kernel.IdGeneratorFactory;
 import org.neo4j.kernel.IdType;
+import org.neo4j.kernel.impl.nioneo.store.structure.StoreFileType;
 
 /**
  * Dynamic store that stores strings.
@@ -32,6 +36,8 @@ public class DynamicStringStore extends AbstractDynamicStore
     // store version, each store ends with this string (byte encoded)
     static final String VERSION = "StringPropertyStore v0.A.0";
     public static final String TYPE_DESCRIPTOR = "StringPropertyStore";
+
+    public static final int DEFAULT_DATA_BLOCK_SIZE = 120;
 
     public DynamicStringStore( String fileName, Map<?,?> config, IdType idType )
     {
@@ -44,6 +50,27 @@ public class DynamicStringStore extends AbstractDynamicStore
         return TYPE_DESCRIPTOR;
     }
 
+    public static class Creator implements StoreFileType.StoreCreator {
+
+        @Override
+        public void create( String fileName, Map<?, ?> config )
+        {
+            IdGeneratorFactory idGeneratorFactory = (IdGeneratorFactory) config.get(
+                    IdGeneratorFactory.class );
+
+            int stringStoreBlockSize = DEFAULT_DATA_BLOCK_SIZE;
+            String stringBlockSize = (String) config.get( STRING_BLOCK_SIZE );
+            if ( stringBlockSize != null )
+            {
+                int value = Integer.parseInt( stringBlockSize );
+                if ( value > 0 )
+                {
+                    stringStoreBlockSize = value;
+                }
+            }
+            createEmptyStore( fileName, stringStoreBlockSize, VERSION, idGeneratorFactory, IdType.STRING_BLOCK );
+        }
+    }
     public static void createStore( String fileName, int blockSize,
             IdGeneratorFactory idGeneratorFactory, IdType idType )
     {

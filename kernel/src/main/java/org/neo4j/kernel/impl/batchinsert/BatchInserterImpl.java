@@ -64,6 +64,7 @@ import org.neo4j.kernel.impl.nioneo.store.RelationshipTypeData;
 import org.neo4j.kernel.impl.nioneo.store.RelationshipTypeRecord;
 import org.neo4j.kernel.impl.nioneo.store.RelationshipTypeStore;
 import org.neo4j.kernel.impl.nioneo.store.UnderlyingStorageException;
+import org.neo4j.kernel.impl.nioneo.store.structure.StoreFileType;
 import org.neo4j.kernel.impl.util.FileUtils;
 import org.neo4j.kernel.impl.util.StringLogger;
 
@@ -620,7 +621,7 @@ public class BatchInserterImpl implements BatchInserter
         String store = dir + fileSeparator + NeoStore.DEFAULT_NAME;
         if ( !new File( store ).exists() )
         {
-            NeoStore.createStore( store, config );
+            StoreFileType.NeoStore.createStore( store, config );
         }
         return store;
     }

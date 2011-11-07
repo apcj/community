@@ -19,13 +19,13 @@
  */
 package org.neo4j.kernel.impl.nioneo.store;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import org.neo4j.kernel.IdGeneratorFactory;
 import org.neo4j.kernel.IdType;
+import org.neo4j.kernel.impl.nioneo.store.structure.StoreFileType;
 import org.neo4j.kernel.impl.util.StringLogger;
 
 /**
@@ -67,19 +67,15 @@ public class RelationshipStore extends AbstractStore implements Store
         super.close();
     }
 
-    /**
-     * Creates a new relationship store contained in <CODE>fileName</CODE> If
-     * filename is <CODE>null</CODE> or the file already exists an <CODE>IOException</CODE>
-     * is thrown.
-     *
-     * @param fileName
-     *            File name of the new relationship store
-     * @throws IOException
-     *             If unable to create relationship store or name null
-     */
-    public static void createStore( String fileName, IdGeneratorFactory idGeneratorFactory )
-    {
-        createEmptyStore( fileName, buildTypeDescriptorAndVersion( TYPE_DESCRIPTOR ), idGeneratorFactory );
+    public static class Creator implements StoreFileType.StoreCreator {
+
+        public void create( String fileName, Map<?, ?> config )
+        {
+            IdGeneratorFactory idGeneratorFactory = (IdGeneratorFactory) config.get(
+                    IdGeneratorFactory.class );
+
+            createEmptyStore( fileName, buildTypeDescriptorAndVersion( TYPE_DESCRIPTOR ), idGeneratorFactory );
+        }
     }
 
     public RelationshipRecord getRecord( long id )

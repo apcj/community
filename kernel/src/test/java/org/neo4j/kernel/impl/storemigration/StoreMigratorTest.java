@@ -43,6 +43,7 @@ import org.neo4j.graphdb.Transaction;
 import org.neo4j.kernel.EmbeddedGraphDatabase;
 import org.neo4j.kernel.impl.nioneo.store.NeoStore;
 import org.neo4j.kernel.impl.nioneo.store.PropertyType;
+import org.neo4j.kernel.impl.nioneo.store.structure.StoreFileType;
 import org.neo4j.kernel.impl.storemigration.legacystore.LegacyStore;
 import org.neo4j.kernel.impl.storemigration.monitoring.MigrationProgressMonitor;
 import org.neo4j.kernel.impl.util.FileUtils;
@@ -64,7 +65,7 @@ public class StoreMigratorTest
 
         String storeFileName = "target/outputDatabase/neostore";
         config.put( "neo_store", storeFileName );
-        NeoStore.createStore( storeFileName, config );
+        StoreFileType.NeoStore.createStore( storeFileName, config );
         NeoStore neoStore = new NeoStore( config );
 
         ListAccumulatorMigrationProgressMonitor monitor = new ListAccumulatorMigrationProgressMonitor();

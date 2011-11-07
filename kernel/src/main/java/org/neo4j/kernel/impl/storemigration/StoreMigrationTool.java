@@ -28,6 +28,7 @@ import org.neo4j.kernel.EmbeddedGraphDatabase;
 import org.neo4j.kernel.IdGeneratorFactory;
 import org.neo4j.kernel.impl.nioneo.store.FileSystemAbstraction;
 import org.neo4j.kernel.impl.nioneo.store.NeoStore;
+import org.neo4j.kernel.impl.nioneo.store.structure.StoreFileType;
 import org.neo4j.kernel.impl.storemigration.legacystore.LegacyStore;
 import org.neo4j.kernel.impl.storemigration.monitoring.VisibleMigrationProgressMonitor;
 
@@ -62,7 +63,7 @@ public class StoreMigrationTool
 
         File targetStoreFile = new File( targetStoreDirectory, NeoStore.DEFAULT_NAME );
         config.put( "neo_store", targetStoreFile.getPath() );
-        NeoStore.createStore( targetStoreFile.getPath(), config );
+        StoreFileType.NeoStore.createStore( targetStoreFile.getPath(), config );
         NeoStore neoStore = new NeoStore( config );
 
         long startTime = System.currentTimeMillis();

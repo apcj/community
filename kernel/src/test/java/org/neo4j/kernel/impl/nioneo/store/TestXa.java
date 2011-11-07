@@ -55,6 +55,7 @@ import org.neo4j.kernel.IdGeneratorFactory;
 import org.neo4j.kernel.impl.AbstractNeo4jTestCase;
 import org.neo4j.kernel.impl.core.LockReleaser;
 import org.neo4j.kernel.impl.core.PropertyIndex;
+import org.neo4j.kernel.impl.nioneo.store.structure.StoreFileType;
 import org.neo4j.kernel.impl.nioneo.xa.NeoStoreXaConnection;
 import org.neo4j.kernel.impl.nioneo.xa.NeoStoreXaDataSource;
 import org.neo4j.kernel.impl.transaction.LockManager;
@@ -152,7 +153,7 @@ public class TestXa extends AbstractNeo4jTestCase
             .getLogger( "org.neo4j.kernel.impl.nioneo.xa.NeoStoreXaDataSource" );
         log.setLevel( Level.OFF );
         deleteFileOrDirectory( new File( path() ) );
-        NeoStore.createStore( file( "neo" ), MapUtil.map(
+        StoreFileType.NeoStore.createStore( file( "neo" ), MapUtil.map(
                 IdGeneratorFactory.class, ID_GENERATOR_FACTORY,
                 FileSystemAbstraction.class, CommonFactories.defaultFileSystemAbstraction() ) );
         lockManager = getEmbeddedGraphDb().getConfig().getLockManager();

@@ -19,7 +19,6 @@
  */
 package org.neo4j.kernel.impl.nioneo.store;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -27,15 +26,12 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
 
 import org.neo4j.helpers.UTF8;
 import org.neo4j.kernel.IdGeneratorFactory;
 import org.neo4j.kernel.IdType;
+import org.neo4j.kernel.impl.nioneo.store.structure.StoreFileType;
 import org.neo4j.kernel.impl.util.StringLogger;
-
-import static org.neo4j.kernel.Config.ARRAY_BLOCK_SIZE;
-import static org.neo4j.kernel.Config.STRING_BLOCK_SIZE;
 
 /**
  * Implementation of the property store. This implementation has two dynamic
@@ -133,55 +129,16 @@ public class PropertyStore extends AbstractStore implements Store
         return RECORD_SIZE;
     }
 
-    /**
-     * Creates a new property store contained in <CODE>fileName</CODE> If
-     * filename is <CODE>null</CODE> or the file already exists an
-     * <CODE>IOException</CODE> is thrown.
-     *
-     * @param fileName
-     *            File name of the new property store
-     * @throws IOException
-     *             If unable to create property store or name null
-     */
-    public static void createStore( String fileName, Map<?,?> config )
-    {
-        IdGeneratorFactory idGeneratorFactory = (IdGeneratorFactory) config.get(
-                IdGeneratorFactory.class );
+    public static class Creator implements StoreFileType.StoreCreator {
 
-        createEmptyStore( fileName, buildTypeDescriptorAndVersion( TYPE_DESCRIPTOR ), idGeneratorFactory );
-        int stringStoreBlockSize = DEFAULT_DATA_BLOCK_SIZE;
-        int arrayStoreBlockSize = DEFAULT_DATA_BLOCK_SIZE;
-        try
+        @Override
+        public void create( String fileName, Map<?, ?> config )
         {
-            String stringBlockSize = (String) config.get( STRING_BLOCK_SIZE );
-            String arrayBlockSize = (String) config.get( ARRAY_BLOCK_SIZE );
-            if ( stringBlockSize != null )
-            {
-                int value = Integer.parseInt( stringBlockSize );
-                if ( value > 0 )
-                {
-                    stringStoreBlockSize = value;
-                }
-            }
-            if ( arrayBlockSize != null )
-            {
-                int value = Integer.parseInt( arrayBlockSize );
-                if ( value > 0 )
-                {
-                    arrayStoreBlockSize = value;
-                }
-            }
-        }
-        catch ( Exception e )
-        {
-            logger.log( Level.WARNING, "Exception creating store", e );
-        }
+            IdGeneratorFactory idGeneratorFactory = (IdGeneratorFactory) config.get(
+                    IdGeneratorFactory.class );
 
-        DynamicStringStore.createStore( fileName + ".strings",
-            stringStoreBlockSize, idGeneratorFactory, IdType.STRING_BLOCK );
-        PropertyIndexStore.createStore( fileName + ".index", idGeneratorFactory );
-        DynamicArrayStore.createStore( fileName + ".arrays",
-                arrayStoreBlockSize, idGeneratorFactory );
+            createEmptyStore( fileName, buildTypeDescriptorAndVersion( TYPE_DESCRIPTOR ), idGeneratorFactory );
+        }
     }
 
     private long nextStringBlockId()

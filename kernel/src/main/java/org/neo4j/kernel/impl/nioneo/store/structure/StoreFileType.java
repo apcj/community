@@ -19,46 +19,55 @@
  */
 package org.neo4j.kernel.impl.nioneo.store.structure;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.Map;
+
+import org.neo4j.kernel.impl.nioneo.store.DynamicArrayStore;
+import org.neo4j.kernel.impl.nioneo.store.DynamicStringStore;
+import org.neo4j.kernel.impl.nioneo.store.NeoStore;
+import org.neo4j.kernel.impl.nioneo.store.NodeStore;
+import org.neo4j.kernel.impl.nioneo.store.PropertyIndexStore;
+import org.neo4j.kernel.impl.nioneo.store.PropertyStore;
+import org.neo4j.kernel.impl.nioneo.store.RelationshipStore;
+import org.neo4j.kernel.impl.nioneo.store.RelationshipTypeStore;
 
 public enum StoreFileType
 {
-    StringStore(),
-    ArrayStore(),
-    PropertyIndexStore(
+    StringStore( new DynamicStringStore.Creator() ),
+    ArrayStore( new DynamicArrayStore.Creator() ),
+    PropertyIndexStore( new PropertyIndexStore.Creator(),
             child( "keys", StringStore ) ),
-    PropertyStore(
+    PropertyStore( new PropertyStore.Creator(),
             child( "strings", StringStore ),
             child( "arrays", ArrayStore ),
             child( "index", PropertyIndexStore ) ),
-    NodeStore(),
-    RelationshipStore(),
-    RelationshipTypeStore(
+    NodeStore( new NodeStore.Creator() ),
+    RelationshipStore( new RelationshipStore.Creator() ),
+    RelationshipTypeStore( new RelationshipTypeStore.Creator(),
             child( "names", StringStore ) ),
-    NeoStore(
+    NeoStore( new NeoStore.Creator(),
             child( "propertystore.db", PropertyStore ),
             child( "nodestore.db", NodeStore ),
             child( "relationshipstore.db", RelationshipStore ),
             child( "relationshiptypestore.db", RelationshipTypeStore ) );
 
+    private StoreCreator storeCreator;
     private ChildStoreFile[] childStoreFiles;
 
-    StoreFileType( ChildStoreFile... childStoreFiles )
+    StoreFileType( StoreCreator creator, ChildStoreFile... childStoreFiles )
     {
+        this.storeCreator = creator;
         this.childStoreFiles = childStoreFiles;
     }
 
-    public void createStore( File storeFile, Map<?,?> config ) throws IOException
+    public void createStore( String fileName, Map<?, ?> config )
     {
-        storeFile.createNewFile();
-
         for ( ChildStoreFile childStoreFile : childStoreFiles )
         {
             childStoreFile.storeFileType.createStore(
-                    new File( storeFile.getPath() + "." + childStoreFile.fileNamePart ), config );
+                    fileName + "." + childStoreFile.fileNamePart, config );
         }
+
+        storeCreator.create( fileName, config );
     }
 
     static ChildStoreFile child( String fileNamePart, StoreFileType storeFileType )
@@ -76,5 +85,10 @@ public enum StoreFileType
             this.fileNamePart = fileNamePart;
             this.storeFileType = storeFileType;
         }
+    }
+
+    public interface StoreCreator
+    {
+        void create( String fileName, Map<?, ?> config );
     }
 }

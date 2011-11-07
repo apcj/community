@@ -53,6 +53,7 @@ import org.neo4j.kernel.IdGeneratorFactory;
 import org.neo4j.kernel.impl.AbstractNeo4jTestCase;
 import org.neo4j.kernel.impl.core.LockReleaser;
 import org.neo4j.kernel.impl.core.PropertyIndex;
+import org.neo4j.kernel.impl.nioneo.store.structure.StoreFileType;
 import org.neo4j.kernel.impl.nioneo.xa.NeoStoreXaConnection;
 import org.neo4j.kernel.impl.nioneo.xa.NeoStoreXaDataSource;
 import org.neo4j.kernel.impl.transaction.LockManager;
@@ -96,7 +97,7 @@ public class TestNeoStore extends AbstractNeo4jTestCase
     public void setUpNeoStore() throws Exception
     {
         deleteFileOrDirectory( path() );
-        NeoStore.createStore( file( "neo" ), MapUtil.map(
+        StoreFileType.NeoStore.createStore( file( "neo" ), MapUtil.map(
                 IdGeneratorFactory.class, ID_GENERATOR_FACTORY,
                 FileSystemAbstraction.class, CommonFactories.defaultFileSystemAbstraction(),
                 LogBufferFactory.class, CommonFactories.defaultLogBufferFactory() ) );
@@ -1036,7 +1037,7 @@ public class TestNeoStore extends AbstractNeo4jTestCase
         config.put( "array_block_size", "302" );
         config.put( IdGeneratorFactory.class, CommonFactories.defaultIdGeneratorFactory() );
         config.put( FileSystemAbstraction.class, CommonFactories.defaultFileSystemAbstraction() );
-        NeoStore.createStore( file( "neo" ), config );
+        StoreFileType.NeoStore.createStore( file( "neo" ), config );
         initializeStores();
         assertEquals( 62 + AbstractDynamicStore.BLOCK_HEADER_SIZE,
                 pStore.getStringBlockSize() );

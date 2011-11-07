@@ -33,6 +33,7 @@ import java.util.logging.Level;
 import org.neo4j.kernel.IdGeneratorFactory;
 import org.neo4j.kernel.IdType;
 import org.neo4j.kernel.impl.core.LastCommittedTxIdSetter;
+import org.neo4j.kernel.impl.nioneo.store.structure.StoreFileType;
 import org.neo4j.kernel.impl.storemigration.ConfigMapUpgradeConfiguration;
 import org.neo4j.kernel.impl.storemigration.DatabaseFiles;
 import org.neo4j.kernel.impl.storemigration.StoreMigrator;
@@ -229,49 +230,40 @@ public class NeoStore extends AbstractStore
         return RECORD_SIZE;
     }
 
-    /**
-     * Creates the neo,node,relationship,property and relationship type stores.
-     *
-     * @param fileName
-     *            The name of store
-     * @param config
-     *            Map of configuration parameters
-     */
-    public static void createStore( String fileName, Map<?,?> config )
-    {
-        IdGeneratorFactory idGeneratorFactory = (IdGeneratorFactory) config.get(
-                IdGeneratorFactory.class );
-        StoreId storeId = (StoreId) config.get( StoreId.class );
-        if ( storeId == null ) storeId = new StoreId();
+    public static class Creator implements StoreFileType.StoreCreator {
 
-        createEmptyStore( fileName, buildTypeDescriptorAndVersion( TYPE_DESCRIPTOR ), idGeneratorFactory );
-        NodeStore.createStore( fileName + ".nodestore.db", config );
-        RelationshipStore.createStore( fileName + ".relationshipstore.db", idGeneratorFactory );
-        PropertyStore.createStore( fileName + ".propertystore.db", config );
-        RelationshipTypeStore.createStore( fileName
-            + ".relationshiptypestore.db", config );
-        if ( !config.containsKey( "neo_store" ) )
+        @Override
+        public void create( String fileName, Map<?, ?> config )
         {
-            // TODO Ugly
-            Map<Object, Object> newConfig = new HashMap<Object, Object>( config );
-            newConfig.put( "neo_store", fileName );
-            config = newConfig;
+            IdGeneratorFactory idGeneratorFactory = (IdGeneratorFactory) config.get(
+                    IdGeneratorFactory.class );
+            StoreId storeId = (StoreId) config.get( StoreId.class );
+            if ( storeId == null ) storeId = new StoreId();
+
+            createEmptyStore( fileName, buildTypeDescriptorAndVersion( TYPE_DESCRIPTOR ), idGeneratorFactory );
+            if ( !config.containsKey( "neo_store" ) )
+            {
+                // TODO Ugly
+                Map<Object, Object> newConfig = new HashMap<Object, Object>( config );
+                newConfig.put( "neo_store", fileName );
+                config = newConfig;
+            }
+            NeoStore neoStore = new NeoStore( config );
+            /*
+             *  created time | random long | backup version | tx id | store version
+             */
+            neoStore.nextId();
+            neoStore.nextId();
+            neoStore.nextId();
+            neoStore.nextId();
+            neoStore.nextId();
+            neoStore.setCreationTime( storeId.getCreationTime() );
+            neoStore.setRandomNumber( storeId.getRandomId() );
+            neoStore.setVersion( 0 );
+            neoStore.setLastCommittedTx( 1 );
+            neoStore.setStoreVersion( storeId.getStoreVersion() );
+            neoStore.close();
         }
-        NeoStore neoStore = new NeoStore( config );
-        /*
-         *  created time | random long | backup version | tx id | store version
-         */
-        neoStore.nextId();
-        neoStore.nextId();
-        neoStore.nextId();
-        neoStore.nextId();
-        neoStore.nextId();
-        neoStore.setCreationTime( storeId.getCreationTime() );
-        neoStore.setRandomNumber( storeId.getRandomId() );
-        neoStore.setVersion( 0 );
-        neoStore.setLastCommittedTx( 1 );
-        neoStore.setStoreVersion( storeId.getStoreVersion() );
-        neoStore.close();
     }
 
     /**
