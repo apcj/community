@@ -39,9 +39,8 @@ public class StoreFileHierarchyTest
     @Test
     public void createsProperFiles() throws IOException
     {
-        StoreFileHierarchy hierarchy = new StoreFileHierarchy();
         File store = TargetDirectory.forTest( getClass() ).directory( "store", true );
-        hierarchy.createStore( store, defaultConfig() );
+        StoreFileType.NeoStore.createFiles( new File( store, "neostore" ) );
 
         assertThat( Arrays.asList(store.list()), hasItem("neostore") );
         assertThat( Arrays.asList(store.list()), hasItem("neostore.nodestore.db") );

@@ -22,27 +22,58 @@ package org.neo4j.kernel.impl.nioneo.store.structure;
 import java.io.File;
 import java.io.IOException;
 
-public class StoreFileType
+public enum StoreFileType
 {
-    private String fileNamePart;
-    private StoreFileType[] childStoreTypes;
+    StringStore(),
+    ArrayStore(),
+    PropertyIndexStore(
+            child( "keys", StringStore ) ),
+    PropertyStore(
+            child( "strings", StringStore ),
+            child( "arrays", ArrayStore ),
+            child( "index", PropertyIndexStore ) ),
+    NodeStore(),
+    RelationshipStore(),
+    RelationshipTypeStore(
+            child( "names", StringStore ) ),
+    NeoStore(
+            child( "propertystore.db", PropertyStore ),
+            child( "nodestore.db", NodeStore ),
+            child( "relationshipstore.db", RelationshipStore ),
+            child( "relationshiptypestore.db", RelationshipTypeStore ) );
 
-    public StoreFileType( String fileNamePart, StoreFileType... childStoreTypes )
+    private ChildStoreFile[] childStoreFiles;
+
+    StoreFileType( ChildStoreFile... childStoreFiles )
     {
-        this.fileNamePart = fileNamePart;
-        this.childStoreTypes = childStoreTypes;
+        this.childStoreFiles = childStoreFiles;
     }
 
-    public void createFiles( File rootFile ) throws IOException
+    public void createFiles( File storeFile ) throws IOException
     {
-        File storeFile = rootFile.isDirectory() ?
-                new File( rootFile, fileNamePart ) :
-                new File( rootFile.getPath() + "." + fileNamePart );
         storeFile.createNewFile();
 
-        for ( StoreFileType childStoreType : childStoreTypes )
+        for ( ChildStoreFile childStoreFile : childStoreFiles )
         {
-            childStoreType.createFiles( storeFile );
+            childStoreFile.storeFileType.createFiles(
+                    new File( storeFile.getPath() + "." + childStoreFile.fileNamePart ) );
+        }
+    }
+
+    static ChildStoreFile child( String fileNamePart, StoreFileType storeFileType )
+    {
+        return new ChildStoreFile( fileNamePart, storeFileType );
+    }
+
+    private static class ChildStoreFile
+    {
+        private final String fileNamePart;
+        private final StoreFileType storeFileType;
+
+        ChildStoreFile( String fileNamePart, StoreFileType storeFileType )
+        {
+            this.fileNamePart = fileNamePart;
+            this.storeFileType = storeFileType;
         }
     }
 }
