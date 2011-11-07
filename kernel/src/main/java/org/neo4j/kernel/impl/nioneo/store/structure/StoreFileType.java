@@ -21,6 +21,7 @@ package org.neo4j.kernel.impl.nioneo.store.structure;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Map;
 
 public enum StoreFileType
 {
@@ -49,14 +50,14 @@ public enum StoreFileType
         this.childStoreFiles = childStoreFiles;
     }
 
-    public void createFiles( File storeFile ) throws IOException
+    public void createStore( File storeFile, Map<?,?> config ) throws IOException
     {
         storeFile.createNewFile();
 
         for ( ChildStoreFile childStoreFile : childStoreFiles )
         {
-            childStoreFile.storeFileType.createFiles(
-                    new File( storeFile.getPath() + "." + childStoreFile.fileNamePart ) );
+            childStoreFile.storeFileType.createStore(
+                    new File( storeFile.getPath() + "." + childStoreFile.fileNamePart ), config );
         }
     }
 

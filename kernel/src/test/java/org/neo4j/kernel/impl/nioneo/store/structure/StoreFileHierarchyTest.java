@@ -40,7 +40,7 @@ public class StoreFileHierarchyTest
     public void createsProperFiles() throws IOException
     {
         File store = TargetDirectory.forTest( getClass() ).directory( "store", true );
-        StoreFileType.NeoStore.createFiles( new File( store, "neostore" ) );
+        StoreFileType.NeoStore.createStore( new File( store, "neostore" ), defaultConfig() );
 
         assertThat( Arrays.asList(store.list()), hasItem("neostore") );
         assertThat( Arrays.asList(store.list()), hasItem("neostore.nodestore.db") );
