@@ -21,6 +21,7 @@ package org.neo4j.kernel.impl.nioneo.store.structure;
 
 import java.util.Map;
 
+import org.neo4j.kernel.IdType;
 import org.neo4j.kernel.impl.nioneo.store.DynamicArrayStore;
 import org.neo4j.kernel.impl.nioneo.store.DynamicStringStore;
 import org.neo4j.kernel.impl.nioneo.store.NeoStore;
@@ -29,13 +30,17 @@ import org.neo4j.kernel.impl.nioneo.store.PropertyIndexStore;
 import org.neo4j.kernel.impl.nioneo.store.PropertyStore;
 import org.neo4j.kernel.impl.nioneo.store.RelationshipStore;
 import org.neo4j.kernel.impl.nioneo.store.RelationshipTypeStore;
+import static org.neo4j.kernel.impl.nioneo.store.RelationshipTypeStore.TYPE_STORE_BLOCK_SIZE;
+import static org.neo4j.kernel.impl.nioneo.store.PropertyIndexStore.KEY_STORE_BLOCK_SIZE;
 
 public enum StoreFileType
 {
-    StringStore( new DynamicStringStore.Creator() ),
+    StringStore( new DynamicStringStore.ConfigurationDrivenBlockSizeCreator() ),
     ArrayStore( new DynamicArrayStore.Creator() ),
+    RelationshipTypeNameStore( new DynamicStringStore.FixedBlockSizeCreator( IdType.RELATIONSHIP_TYPE_BLOCK, TYPE_STORE_BLOCK_SIZE ) ),
+    PropertyIndexKeyStore( new DynamicStringStore.FixedBlockSizeCreator( IdType.PROPERTY_INDEX_BLOCK, KEY_STORE_BLOCK_SIZE ) ),
     PropertyIndexStore( new PropertyIndexStore.Creator(),
-            child( "keys", StringStore ) ),
+            child( "keys", PropertyIndexKeyStore ) ),
     PropertyStore( new PropertyStore.Creator(),
             child( "strings", StringStore ),
             child( "arrays", ArrayStore ),
@@ -43,7 +48,7 @@ public enum StoreFileType
     NodeStore( new NodeStore.Creator() ),
     RelationshipStore( new RelationshipStore.Creator() ),
     RelationshipTypeStore( new RelationshipTypeStore.Creator(),
-            child( "names", StringStore ) ),
+            child( "names", RelationshipTypeNameStore ) ),
     NeoStore( new NeoStore.Creator(),
             child( "propertystore.db", PropertyStore ),
             child( "nodestore.db", NodeStore ),

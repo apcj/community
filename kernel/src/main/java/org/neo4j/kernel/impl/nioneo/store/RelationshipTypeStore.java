@@ -46,9 +46,7 @@ public class RelationshipTypeStore extends AbstractStore implements Store
     // record header size
     // in_use(byte)+type_blockId(int)
     private static final int RECORD_SIZE = 5;
-
-    private static final int TYPE_STORE_BLOCK_SIZE = 30;
-
+    public static final int TYPE_STORE_BLOCK_SIZE = 30;
     private DynamicStringStore typeNameStore;
 
     public RelationshipTypeStore( String fileName, Map<?,?> config, IdType idType )

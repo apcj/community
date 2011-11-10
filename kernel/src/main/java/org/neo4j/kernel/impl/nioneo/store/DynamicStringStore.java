@@ -19,7 +19,6 @@
  */
 package org.neo4j.kernel.impl.nioneo.store;
 
-import static org.neo4j.kernel.Config.ARRAY_BLOCK_SIZE;
 import static org.neo4j.kernel.Config.STRING_BLOCK_SIZE;
 
 import java.util.Map;
@@ -39,7 +38,7 @@ public class DynamicStringStore extends AbstractDynamicStore
 
     public static final int DEFAULT_DATA_BLOCK_SIZE = 120;
 
-    public DynamicStringStore( String fileName, Map<?,?> config, IdType idType )
+    public DynamicStringStore( String fileName, Map<?, ?> config, IdType idType )
     {
         super( fileName, config, idType );
     }
@@ -50,14 +49,10 @@ public class DynamicStringStore extends AbstractDynamicStore
         return TYPE_DESCRIPTOR;
     }
 
-    public static class Creator implements StoreFileType.StoreCreator {
-
-        @Override
+    public static class ConfigurationDrivenBlockSizeCreator implements StoreFileType.StoreCreator
+    {
         public void create( String fileName, Map<?, ?> config )
         {
-            IdGeneratorFactory idGeneratorFactory = (IdGeneratorFactory) config.get(
-                    IdGeneratorFactory.class );
-
             int stringStoreBlockSize = DEFAULT_DATA_BLOCK_SIZE;
             String stringBlockSize = (String) config.get( STRING_BLOCK_SIZE );
             if ( stringBlockSize != null )
@@ -68,11 +63,32 @@ public class DynamicStringStore extends AbstractDynamicStore
                     stringStoreBlockSize = value;
                 }
             }
-            createEmptyStore( fileName, stringStoreBlockSize, VERSION, idGeneratorFactory, IdType.STRING_BLOCK );
+            new FixedBlockSizeCreator( IdType.STRING_BLOCK, stringStoreBlockSize ).create( fileName, config );
         }
     }
+
+    public static class FixedBlockSizeCreator implements StoreFileType.StoreCreator
+    {
+        private final IdType idType;
+        private final int blockSize;
+
+        public FixedBlockSizeCreator( IdType idType, int blockSize )
+        {
+            this.idType = idType;
+            this.blockSize = blockSize;
+        }
+
+        public void create( String fileName, Map<?, ?> config )
+        {
+            IdGeneratorFactory idGeneratorFactory = (IdGeneratorFactory) config.get(
+                    IdGeneratorFactory.class );
+
+            createEmptyStore( fileName, blockSize, VERSION, idGeneratorFactory, idType );
+        }
+    }
+
     public static void createStore( String fileName, int blockSize,
-            IdGeneratorFactory idGeneratorFactory, IdType idType )
+                                    IdGeneratorFactory idGeneratorFactory, IdType idType )
     {
         createEmptyStore( fileName, blockSize, VERSION, idGeneratorFactory, idType );
     }

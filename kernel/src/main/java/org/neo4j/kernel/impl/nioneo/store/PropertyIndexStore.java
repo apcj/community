@@ -38,7 +38,7 @@ public class PropertyIndexStore extends AbstractStore implements Store
 {
     public static final String TYPE_DESCRIPTOR = "PropertyIndexStore";
 
-    private static final int KEY_STORE_BLOCK_SIZE = 30;
+    public static final int KEY_STORE_BLOCK_SIZE = 30;
 
     // in_use(byte)+prop_count(int)+key_block_id(int)
     private static final int RECORD_SIZE = 9;
