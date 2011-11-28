@@ -49,30 +49,19 @@ public class DynamicStringStore extends AbstractDynamicStore
         return TYPE_DESCRIPTOR;
     }
 
-    public static class ConfigurationDrivenBlockSizeCreator implements StoreFileType.StoreCreator
-    {
-        public void create( String fileName, Map<?, ?> config )
-        {
-            int stringStoreBlockSize = DEFAULT_DATA_BLOCK_SIZE;
-            String stringBlockSize = (String) config.get( STRING_BLOCK_SIZE );
-            if ( stringBlockSize != null )
-            {
-                int value = Integer.parseInt( stringBlockSize );
-                if ( value > 0 )
-                {
-                    stringStoreBlockSize = value;
-                }
-            }
-            new FixedBlockSizeCreator( IdType.STRING_BLOCK, stringStoreBlockSize ).create( fileName, config );
-        }
-    }
-
-    public static class FixedBlockSizeCreator implements StoreFileType.StoreCreator
+    public static class Creator implements StoreFileType.StoreCreator
     {
         private final IdType idType;
         private final int blockSize;
+        private static final int NULL_BLOCKSIZE = 0;
 
-        public FixedBlockSizeCreator( IdType idType, int blockSize )
+        public Creator()
+        {
+            this.idType = IdType.STRING_BLOCK;
+            this.blockSize = NULL_BLOCKSIZE;
+        }
+
+        public Creator( IdType idType, int blockSize )
         {
             this.idType = idType;
             this.blockSize = blockSize;
@@ -83,7 +72,34 @@ public class DynamicStringStore extends AbstractDynamicStore
             IdGeneratorFactory idGeneratorFactory = (IdGeneratorFactory) config.get(
                     IdGeneratorFactory.class );
 
-            createEmptyStore( fileName, blockSize, VERSION, idGeneratorFactory, idType );
+            createEmptyStore( fileName, getBlockSize( config ), VERSION, idGeneratorFactory, idType );
+        }
+
+        private int getBlockSize( Map<?, ?> config )
+        {
+            if ( blockSize == NULL_BLOCKSIZE )
+            {
+                return parseConfiguredBlockSize( config );
+            }
+
+            return blockSize;
+        }
+
+        private int parseConfiguredBlockSize( Map<?, ?> config )
+        {
+            int size = DEFAULT_DATA_BLOCK_SIZE;
+
+            String stringBlockSize = (String) config.get( STRING_BLOCK_SIZE );
+            if ( stringBlockSize != null )
+            {
+                int value = Integer.parseInt( stringBlockSize );
+                if ( value > 0 )
+                {
+                    size = value;
+                }
+            }
+
+            return size;
         }
     }
 

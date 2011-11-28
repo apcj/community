@@ -35,10 +35,10 @@ import static org.neo4j.kernel.impl.nioneo.store.PropertyIndexStore.KEY_STORE_BL
 
 public enum StoreFileType
 {
-    StringStore( new DynamicStringStore.ConfigurationDrivenBlockSizeCreator() ),
+    StringStore( new DynamicStringStore.Creator() ),
     ArrayStore( new DynamicArrayStore.Creator() ),
-    RelationshipTypeNameStore( new DynamicStringStore.FixedBlockSizeCreator( IdType.RELATIONSHIP_TYPE_BLOCK, TYPE_STORE_BLOCK_SIZE ) ),
-    PropertyIndexKeyStore( new DynamicStringStore.FixedBlockSizeCreator( IdType.PROPERTY_INDEX_BLOCK, KEY_STORE_BLOCK_SIZE ) ),
+    RelationshipTypeNameStore( new DynamicStringStore.Creator( IdType.RELATIONSHIP_TYPE_BLOCK, TYPE_STORE_BLOCK_SIZE ) ),
+    PropertyIndexKeyStore( new DynamicStringStore.Creator( IdType.PROPERTY_INDEX_BLOCK, KEY_STORE_BLOCK_SIZE ) ),
     PropertyIndexStore( new PropertyIndexStore.Creator(),
             child( "keys", PropertyIndexKeyStore ) ),
     PropertyStore( new PropertyStore.Creator(),
