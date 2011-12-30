@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.neo4j.kernel.impl.nioneo.store.NeoStore;
+import org.neo4j.kernel.impl.nioneo.store.structure.StoreFileType;
 import org.neo4j.kernel.impl.storemigration.legacystore.LegacyStore;
 import org.neo4j.kernel.impl.util.FileUtils;
 
@@ -92,7 +93,7 @@ public class StoreUpgrader
         Map<Object, Object> upgradeConfig = new HashMap<Object, Object>( originalConfig );
         upgradeConfig.put( "neo_store", upgradeFileName );
 
-        NeoStore.createStore( upgradeFileName, upgradeConfig );
+        StoreFileType.NeoStore.createStore( upgradeFileName, upgradeConfig );
         NeoStore neoStore = new NeoStore( upgradeConfig );
         try
         {

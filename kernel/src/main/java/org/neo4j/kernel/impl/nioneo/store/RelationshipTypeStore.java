@@ -27,6 +27,7 @@ import java.util.Map;
 
 import org.neo4j.kernel.IdGeneratorFactory;
 import org.neo4j.kernel.IdType;
+import org.neo4j.kernel.impl.nioneo.store.structure.StoreFileType;
 
 /**
  * Implementation of the relationship type store. Uses a dynamic store to store
@@ -36,6 +37,7 @@ public class RelationshipTypeStore extends AbstractNameStore<RelationshipTypeRec
 {
     public static final String TYPE_DESCRIPTOR = "RelationshipTypeStore";
     private static final int RECORD_SIZE = 1/*inUse*/ + 4/*nameId*/;
+    public static final int TYPE_STORE_BLOCK_SIZE = 30;
 
     public RelationshipTypeStore( String fileName, Map<?,?> config )
     {
@@ -48,27 +50,20 @@ public class RelationshipTypeStore extends AbstractNameStore<RelationshipTypeRec
         processor.processRelationshipType( this, record );
     }
 
-    /**
-     * Creates a new relationship type store contained in <CODE>fileName</CODE>
-     * If filename is <CODE>null</CODE> or the file already exists an
-     * <CODE>IOException</CODE> is thrown.
-     *
-     * @param fileName
-     *            File name of the new relationship type store
-     * @throws IOException
-     *             If unable to create store or name null
-     */
-    public static void createStore( String fileName, Map<?, ?> config )
+    public static class Creator implements StoreFileType.StoreCreator
     {
-        IdGeneratorFactory idGeneratorFactory = (IdGeneratorFactory) config.get(
-                IdGeneratorFactory.class );
-        FileSystemAbstraction fileSystem = (FileSystemAbstraction) config.get( FileSystemAbstraction.class );
-        createEmptyStore( fileName, buildTypeDescriptorAndVersion( TYPE_DESCRIPTOR ), idGeneratorFactory,
-                fileSystem );
-        DynamicStringStore.createStore( fileName + ".names",
-            NAME_STORE_BLOCK_SIZE, idGeneratorFactory, fileSystem, IdType.RELATIONSHIP_TYPE_BLOCK );
-        RelationshipTypeStore store = new RelationshipTypeStore( fileName, config );
-        store.close();
+        @Override
+        public void create( String fileName, Map<?, ?> config )
+        {
+            IdGeneratorFactory idGeneratorFactory = (IdGeneratorFactory) config.get(
+                    IdGeneratorFactory.class );
+
+            FileSystemAbstraction fileSystem = (FileSystemAbstraction) config.get( FileSystemAbstraction.class );
+
+            createEmptyStore( fileName, buildTypeDescriptorAndVersion( TYPE_DESCRIPTOR ), idGeneratorFactory, fileSystem );
+            RelationshipTypeStore store = new RelationshipTypeStore( fileName, config );
+            store.close();
+        }
     }
 
     void markAsReserved( int id )

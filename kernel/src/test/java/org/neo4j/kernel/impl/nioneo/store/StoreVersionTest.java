@@ -34,6 +34,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.neo4j.kernel.CommonFactories;
 import org.neo4j.kernel.IdGeneratorFactory;
+import org.neo4j.kernel.impl.nioneo.store.structure.StoreFileType;
 import org.neo4j.kernel.impl.storemigration.StoreMigrator;
 import org.neo4j.kernel.impl.util.FileUtils;
 
@@ -52,7 +53,7 @@ public class StoreVersionTest
         config.put( FileSystemAbstraction.class, CommonFactories.defaultFileSystemAbstraction() );
         config.put( "neo_store", storeFileName );
 
-        NeoStore.createStore( storeFileName, config );
+        StoreFileType.NeoStore.createStore( storeFileName, config );
         NeoStore neoStore = new NeoStore( config );
 
         CommonAbstractStore[] stores = {
@@ -112,7 +113,7 @@ public class StoreVersionTest
                 CommonFactories.defaultFileSystemAbstraction() );
         config.put( "neo_store", storeFileName );
 
-        NeoStore.createStore( storeFileName, config );
+        StoreFileType.NeoStore.createStore( storeFileName, config );
         NeoStore neoStore = new NeoStore( config );
         // The first checks the instance method, the other the public one
         assertEquals( CommonAbstractStore.ALL_STORES_VERSION,

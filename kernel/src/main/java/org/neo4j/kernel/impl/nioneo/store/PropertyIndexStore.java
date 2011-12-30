@@ -23,6 +23,7 @@ import java.util.Map;
 
 import org.neo4j.kernel.IdGeneratorFactory;
 import org.neo4j.kernel.IdType;
+import org.neo4j.kernel.impl.nioneo.store.structure.StoreFileType;
 
 /**
  * Implementation of the property store.
@@ -30,11 +31,27 @@ import org.neo4j.kernel.IdType;
 public class PropertyIndexStore extends AbstractNameStore<PropertyIndexRecord>
 {
     public static final String TYPE_DESCRIPTOR = "PropertyIndexStore";
+    public static final int KEY_STORE_BLOCK_SIZE = 30;
     private static final int RECORD_SIZE = 1/*inUse*/ + 4/*prop count*/ + 4/*nameId*/;
 
     public PropertyIndexStore( String fileName, Map<?,?> config )
     {
         super( fileName, config, IdType.PROPERTY_INDEX );
+    }
+
+    public static class Creator implements StoreFileType.StoreCreator
+    {
+
+        @Override
+        public void create( String fileName, Map<?, ?> config )
+        {
+            IdGeneratorFactory idGeneratorFactory = (IdGeneratorFactory) config.get(
+                    IdGeneratorFactory.class );
+
+            FileSystemAbstraction fileSystem = (FileSystemAbstraction) config.get( FileSystemAbstraction.class );
+
+            createEmptyStore( fileName, buildTypeDescriptorAndVersion( TYPE_DESCRIPTOR ), idGeneratorFactory, fileSystem );
+        }
     }
 
     @Override

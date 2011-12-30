@@ -35,6 +35,7 @@ import java.util.logging.Level;
 import org.neo4j.helpers.UTF8;
 import org.neo4j.kernel.IdGeneratorFactory;
 import org.neo4j.kernel.IdType;
+import org.neo4j.kernel.impl.nioneo.store.structure.StoreFileType;
 import org.neo4j.kernel.impl.util.StringLogger;
 
 /**
@@ -61,6 +62,20 @@ public class PropertyStore extends AbstractStore implements Store, RecordStore<P
     public PropertyStore( String fileName, Map<?,?> config )
     {
         super( fileName, config, IdType.PROPERTY );
+    }
+
+    public static class Creator implements StoreFileType.StoreCreator {
+
+        @Override
+        public void create( String fileName, Map<?, ?> config )
+        {
+            IdGeneratorFactory idGeneratorFactory = (IdGeneratorFactory) config.get(
+                    IdGeneratorFactory.class );
+
+            FileSystemAbstraction fileSystem = (FileSystemAbstraction) config.get( FileSystemAbstraction.class );
+
+            createEmptyStore( fileName, buildTypeDescriptorAndVersion( TYPE_DESCRIPTOR ), idGeneratorFactory, fileSystem );
+        }
     }
 
     @Override
