@@ -111,13 +111,6 @@ public class DynamicStringStore extends AbstractDynamicStore
         }
     }
 
-    //TODO: remove method
-    public static void createStore( String fileName, int blockSize,
-            IdGeneratorFactory idGeneratorFactory, FileSystemAbstraction fileSystem, IdType idType )
-    {
-        createEmptyStore( fileName, blockSize, VERSION, idGeneratorFactory, fileSystem, idType );
-    }
-
     @Override
     public void setHighId( long highId )
     {

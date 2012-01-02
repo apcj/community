@@ -60,15 +60,6 @@ public class PropertyIndexStore extends AbstractNameStore<PropertyIndexRecord>
         processor.processPropertyIndex( this, record );
     }
 
-    public static void createStore( String fileName, IdGeneratorFactory idGeneratorFactory,
-            FileSystemAbstraction fileSystem )
-    {
-        createEmptyStore( fileName, buildTypeDescriptorAndVersion( TYPE_DESCRIPTOR ), idGeneratorFactory,
-                fileSystem );
-        DynamicStringStore.createStore( fileName + ".keys",
-                NAME_STORE_BLOCK_SIZE, idGeneratorFactory, fileSystem, IdType.PROPERTY_INDEX_BLOCK );
-    }
-
     @Override
     protected PropertyIndexRecord newRecord( int id )
     {

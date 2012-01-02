@@ -86,13 +86,6 @@ public class DynamicArrayStore extends AbstractDynamicStore
         }
     }
 
-    //TODO: remove method
-    public static void createStore( String fileName, int blockSize,
-            IdGeneratorFactory idGeneratorFactory, FileSystemAbstraction fileSystem )
-    {
-        createEmptyStore( fileName, blockSize, VERSION, idGeneratorFactory, fileSystem, IdType.ARRAY_BLOCK );
-    }
-
     private Collection<DynamicRecord> allocateFromNumbers( long startBlock, Object array )
     {
         ShortArray type = ShortArray.typeOf( array );

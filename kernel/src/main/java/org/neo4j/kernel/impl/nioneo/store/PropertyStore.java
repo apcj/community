@@ -170,59 +170,6 @@ public class PropertyStore extends AbstractStore implements Store, RecordStore<P
         return RECORD_SIZE - DEFAULT_PAYLOAD_SIZE;
     }
 
-    /**
-     * Creates a new property store contained in <CODE>fileName</CODE> If
-     * filename is <CODE>null</CODE> or the file already exists an
-     * <CODE>IOException</CODE> is thrown.
-     *
-     * @param fileName
-     *            File name of the new property store
-     * @throws IOException
-     *             If unable to create property store or name null
-     */
-    public static void createStore( String fileName, Map<?,?> config )
-    {
-        IdGeneratorFactory idGeneratorFactory = (IdGeneratorFactory) config.get(
-                IdGeneratorFactory.class );
-        FileSystemAbstraction fileSystem = (FileSystemAbstraction) config.get( FileSystemAbstraction.class );
-
-        createEmptyStore( fileName, buildTypeDescriptorAndVersion( TYPE_DESCRIPTOR ), idGeneratorFactory,
-                fileSystem );
-        int stringStoreBlockSize = DEFAULT_DATA_BLOCK_SIZE;
-        int arrayStoreBlockSize = DEFAULT_DATA_BLOCK_SIZE;
-        try
-        {
-            String stringBlockSize = (String) config.get( STRING_BLOCK_SIZE );
-            String arrayBlockSize = (String) config.get( ARRAY_BLOCK_SIZE );
-            if ( stringBlockSize != null )
-            {
-                int value = Integer.parseInt( stringBlockSize );
-                if ( value > 0 )
-                {
-                    stringStoreBlockSize = value;
-                }
-            }
-            if ( arrayBlockSize != null )
-            {
-                int value = Integer.parseInt( arrayBlockSize );
-                if ( value > 0 )
-                {
-                    arrayStoreBlockSize = value;
-                }
-            }
-        }
-        catch ( Exception e )
-        {
-            logger.log( Level.WARNING, "Exception creating store", e );
-        }
-
-        DynamicStringStore.createStore( fileName + ".strings",
-            stringStoreBlockSize, idGeneratorFactory, fileSystem, IdType.STRING_BLOCK );
-        PropertyIndexStore.createStore( fileName + ".index", idGeneratorFactory, fileSystem );
-        DynamicArrayStore.createStore( fileName + ".arrays",
-                arrayStoreBlockSize, idGeneratorFactory, fileSystem );
-    }
-
     private long nextStringBlockId()
     {
         return stringPropertyStore.nextBlockId();
