@@ -53,7 +53,7 @@ public class StoreVersionTest
         config.put( FileSystemAbstraction.class, CommonFactories.defaultFileSystemAbstraction() );
         config.put( "neo_store", storeFileName );
 
-        StoreFileType.NeoStore.createStore( storeFileName, config );
+        StoreFileType.Neo.createStore( storeFileName, config );
         NeoStore neoStore = new NeoStore( config );
 
         CommonAbstractStore[] stores = {
@@ -113,7 +113,7 @@ public class StoreVersionTest
                 CommonFactories.defaultFileSystemAbstraction() );
         config.put( "neo_store", storeFileName );
 
-        StoreFileType.NeoStore.createStore( storeFileName, config );
+        StoreFileType.Neo.createStore( storeFileName, config );
         NeoStore neoStore = new NeoStore( config );
         // The first checks the instance method, the other the public one
         assertEquals( CommonAbstractStore.ALL_STORES_VERSION,

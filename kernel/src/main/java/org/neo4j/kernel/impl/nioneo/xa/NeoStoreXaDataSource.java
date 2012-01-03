@@ -188,7 +188,7 @@ public class NeoStoreXaDataSource extends LogBackedXaDataSource
         {
             msgLog.logMessage( "Creating new db @ " + store, true );
             autoCreatePath( store );
-            StoreFileType.NeoStore.createStore( store, config );
+            StoreFileType.Neo.createStore( store, config );
         }
 
         providers = new ArrayList<Pair<TransactionInterceptorProvider, Object>>(

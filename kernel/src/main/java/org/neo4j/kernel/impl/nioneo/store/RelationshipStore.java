@@ -19,7 +19,6 @@
  */
 package org.neo4j.kernel.impl.nioneo.store;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -80,10 +79,10 @@ public class RelationshipStore extends AbstractStore implements Store, RecordSto
         super.close();
     }
 
-    public static class Creator implements StoreFileType.StoreCreator
+    public static class Initializer implements StoreFileType.StoreInitializer
     {
 
-        public void create( String fileName, Map<?, ?> config )
+        public void initialize( String fileName, Map<?, ?> config )
         {
             IdGeneratorFactory idGeneratorFactory = (IdGeneratorFactory) config.get(
                     IdGeneratorFactory.class );

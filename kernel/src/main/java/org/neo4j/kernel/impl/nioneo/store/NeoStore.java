@@ -307,18 +307,14 @@ public class NeoStore extends AbstractStore
         return txHook;
     }
 
-    public static class Creator implements StoreFileType.StoreCreator {
-
+    public static class Initializer implements StoreFileType.StoreInitializer
+    {
         @Override
-        public void create( String fileName, Map<?, ?> config )
+        public void initialize( String fileName, Map<?, ?> config )
         {
-            IdGeneratorFactory idGeneratorFactory = (IdGeneratorFactory) config.get(
-                    IdGeneratorFactory.class );
-            FileSystemAbstraction fileSystem = (FileSystemAbstraction) config.get( FileSystemAbstraction.class );
             StoreId storeId = (StoreId) config.get( StoreId.class );
             if ( storeId == null ) storeId = new StoreId();
 
-            createEmptyStore( fileName, buildTypeDescriptorAndVersion( TYPE_DESCRIPTOR ), idGeneratorFactory, fileSystem );
             if ( !config.containsKey( "neo_store" ) )
             {
                 // TODO Ugly

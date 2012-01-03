@@ -80,8 +80,9 @@ public abstract class AbstractStore extends CommonAbstractStore
      * @throws IOException
      *             If fileName is null or if file exists
      */
-    protected static void createEmptyStore( String fileName,
-        String typeAndVersionDescriptor, IdGeneratorFactory idGeneratorFactory, FileSystemAbstraction fileSystem )
+    public static void createEmptyStore( String fileName,
+        String typeAndVersionDescriptor, IdGeneratorFactory idGeneratorFactory,
+        FileSystemAbstraction fileSystem )
     {
         // sanity checks
         if ( fileName == null )

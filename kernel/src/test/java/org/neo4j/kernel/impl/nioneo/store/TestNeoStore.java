@@ -101,7 +101,7 @@ public class TestNeoStore extends AbstractNeo4jTestCase
     public void setUpNeoStore() throws Exception
     {
         deleteFileOrDirectory( path() );
-        StoreFileType.NeoStore.createStore( file( "neo" ), MapUtil.map(
+        StoreFileType.Neo.createStore( file( "neo" ), MapUtil.map(
                 IdGeneratorFactory.class, ID_GENERATOR_FACTORY,
                 FileSystemAbstraction.class, CommonFactories.defaultFileSystemAbstraction(),
                 LogBufferFactory.class, CommonFactories.defaultLogBufferFactory() ) );
@@ -1045,7 +1045,7 @@ public class TestNeoStore extends AbstractNeo4jTestCase
         config.put( "array_block_size", "302" );
         config.put( IdGeneratorFactory.class, CommonFactories.defaultIdGeneratorFactory() );
         config.put( FileSystemAbstraction.class, CommonFactories.defaultFileSystemAbstraction() );
-        StoreFileType.NeoStore.createStore( file( "neo" ), config );
+        StoreFileType.Neo.createStore( file( "neo" ), config );
         initializeStores();
         assertEquals( 62 + AbstractDynamicStore.BLOCK_HEADER_SIZE,
                 pStore.getStringBlockSize() );

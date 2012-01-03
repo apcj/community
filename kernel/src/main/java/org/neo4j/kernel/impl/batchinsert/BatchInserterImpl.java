@@ -875,7 +875,7 @@ public class BatchInserterImpl implements BatchInserter
         String store = dir + fileSeparator + NeoStore.DEFAULT_NAME;
         if ( !new File( store ).exists() )
         {
-            StoreFileType.NeoStore.createStore( store, config );
+            StoreFileType.Neo.createStore( store, config );
         }
         return store;
     }

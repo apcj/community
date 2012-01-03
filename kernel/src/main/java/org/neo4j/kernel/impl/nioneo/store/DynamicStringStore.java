@@ -33,7 +33,7 @@ import org.neo4j.kernel.impl.nioneo.store.structure.StoreFileType;
 public class DynamicStringStore extends AbstractDynamicStore
 {
     // store version, each store ends with this string (byte encoded)
-    static final String VERSION = "StringPropertyStore v0.A.0";
+    public static final String VERSION = "StringPropertyStore v0.A.0";
     public static final String TYPE_DESCRIPTOR = "StringPropertyStore";
 
     public static final int DEFAULT_DATA_BLOCK_SIZE = 120;
@@ -55,25 +55,25 @@ public class DynamicStringStore extends AbstractDynamicStore
         return TYPE_DESCRIPTOR;
     }
 
-    public static class Creator implements StoreFileType.StoreCreator
+    public static class Initializer implements StoreFileType.StoreInitializer
     {
         private final IdType idType;
         private final int blockSize;
         private static final int NULL_BLOCKSIZE = 0;
 
-        public Creator()
+        public Initializer()
         {
             this.idType = IdType.STRING_BLOCK;
             this.blockSize = NULL_BLOCKSIZE;
         }
 
-        public Creator( IdType idType, int blockSize )
+        public Initializer( IdType idType, int blockSize )
         {
             this.idType = idType;
             this.blockSize = blockSize;
         }
 
-        public void create( String fileName, Map<?, ?> config )
+        public void initialize( String fileName, Map<?, ?> config )
         {
             IdGeneratorFactory idGeneratorFactory = (IdGeneratorFactory) config.get(
                     IdGeneratorFactory.class );
@@ -110,6 +110,42 @@ public class DynamicStringStore extends AbstractDynamicStore
             return size;
         }
     }
+
+    public static class BlockSizeConfiguration implements StoreFileType.DynamicRecordLength.RecordLengthConfiguration {
+
+        public int getBlockSize( Map<?, ?> config )
+        {
+            int size = DEFAULT_DATA_BLOCK_SIZE;
+
+            String stringBlockSize = (String) config.get( STRING_BLOCK_SIZE );
+            if ( stringBlockSize != null )
+            {
+                int value = Integer.parseInt( stringBlockSize );
+                if ( value > 0 )
+                {
+                    size = value;
+                }
+            }
+
+            return size;
+        }
+    }
+
+    public static class FixedBlockSize implements StoreFileType.DynamicRecordLength.RecordLengthConfiguration {
+
+        private final int blockSize;
+
+        public FixedBlockSize( int blockSize )
+        {
+            this.blockSize = blockSize;
+        }
+
+        public int getBlockSize( Map<?, ?> config )
+        {
+            return blockSize;
+        }
+    }
+
 
     @Override
     public void setHighId( long highId )

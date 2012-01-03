@@ -67,17 +67,11 @@ public class NodeStore extends AbstractStore implements Store, RecordStore<NodeR
         return getRecordSize();
     }
 
-    public static class Creator implements StoreFileType.StoreCreator
+    public static class Initializer implements StoreFileType.StoreInitializer
     {
 
-        public void create( String fileName, Map<?, ?> config )
+        public void initialize( String fileName, Map<?, ?> config )
         {
-            IdGeneratorFactory idGeneratorFactory = (IdGeneratorFactory) config.get(
-                    IdGeneratorFactory.class );
-
-            FileSystemAbstraction fileSystem = (FileSystemAbstraction) config.get( FileSystemAbstraction.class );
-
-            createEmptyStore( fileName, buildTypeDescriptorAndVersion( TYPE_DESCRIPTOR ), idGeneratorFactory, fileSystem );
             NodeStore store = new NodeStore( fileName, config );
             NodeRecord nodeRecord = new NodeRecord( store.nextId(), Record.NO_NEXT_RELATIONSHIP.intValue(), Record.NO_NEXT_PROPERTY.intValue() );
             nodeRecord.setInUse( true );

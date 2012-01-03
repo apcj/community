@@ -123,7 +123,7 @@ public class TestXa extends AbstractNeo4jTestCase
         log.setLevel( Level.OFF );
         deleteFileOrDirectory( new File( path() ) );
         propertyIndexes = new HashMap<String, PropertyIndex>();
-        StoreFileType.NeoStore.createStore( file( "neo" ), MapUtil.map(
+        StoreFileType.Neo.createStore( file( "neo" ), MapUtil.map(
                 IdGeneratorFactory.class, ID_GENERATOR_FACTORY,
                 FileSystemAbstraction.class, CommonFactories.defaultFileSystemAbstraction() ) );
         lockManager = getEmbeddedGraphDb().getConfig().getLockManager();

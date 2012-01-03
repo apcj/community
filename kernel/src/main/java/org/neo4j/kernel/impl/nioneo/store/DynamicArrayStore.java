@@ -39,7 +39,7 @@ import org.neo4j.kernel.impl.util.Bits;
 public class DynamicArrayStore extends AbstractDynamicStore
 {
     // store version, each store ends with this string (byte encoded)
-    static final String VERSION = "ArrayPropertyStore v0.A.0";
+    public static final String VERSION = "ArrayPropertyStore v0.A.0";
     public static final String TYPE_DESCRIPTOR = "ArrayPropertyStore";
 
     public static final int DEFAULT_DATA_BLOCK_SIZE = 120;
@@ -61,11 +61,11 @@ public class DynamicArrayStore extends AbstractDynamicStore
         return TYPE_DESCRIPTOR;
     }
 
-    public static class Creator implements StoreFileType.StoreCreator
+    public static class Initializer implements StoreFileType.StoreInitializer
     {
 
         @Override
-        public void create( String fileName, Map<?, ?> config )
+        public void initialize( String fileName, Map<?, ?> config )
         {
             IdGeneratorFactory idGeneratorFactory = (IdGeneratorFactory) config.get(
                     IdGeneratorFactory.class );
@@ -83,6 +83,26 @@ public class DynamicArrayStore extends AbstractDynamicStore
                 }
             }
             createEmptyStore( fileName, arrayStoreBlockSize, VERSION, idGeneratorFactory, fileSystem, IdType.ARRAY_BLOCK );
+        }
+    }
+
+    public static class BlockSizeConfiguration implements StoreFileType.DynamicRecordLength.RecordLengthConfiguration {
+
+        public int getBlockSize( Map<?, ?> config )
+        {
+            int size = DEFAULT_DATA_BLOCK_SIZE;
+
+            String arrayBlockSize = (String) config.get( ARRAY_BLOCK_SIZE );
+            if ( arrayBlockSize != null )
+            {
+                int value = Integer.parseInt( arrayBlockSize );
+                if ( value > 0 )
+                {
+                    size = value;
+                }
+            }
+
+            return size;
         }
     }
 

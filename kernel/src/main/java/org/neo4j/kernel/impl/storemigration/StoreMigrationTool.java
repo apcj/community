@@ -63,7 +63,7 @@ public class StoreMigrationTool
 
         File targetStoreFile = new File( targetStoreDirectory, NeoStore.DEFAULT_NAME );
         config.put( "neo_store", targetStoreFile.getPath() );
-        StoreFileType.NeoStore.createStore( targetStoreFile.getPath(), config );
+        StoreFileType.Neo.createStore( targetStoreFile.getPath(), config );
         NeoStore neoStore = new NeoStore( config );
 
         long startTime = System.currentTimeMillis();

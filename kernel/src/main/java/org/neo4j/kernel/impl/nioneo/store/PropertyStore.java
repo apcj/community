@@ -19,10 +19,6 @@
  */
 package org.neo4j.kernel.impl.nioneo.store;
 
-import static org.neo4j.kernel.Config.ARRAY_BLOCK_SIZE;
-import static org.neo4j.kernel.Config.STRING_BLOCK_SIZE;
-
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -30,7 +26,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
 
 import org.neo4j.helpers.UTF8;
 import org.neo4j.kernel.IdGeneratorFactory;
@@ -64,10 +59,11 @@ public class PropertyStore extends AbstractStore implements Store, RecordStore<P
         super( fileName, config, IdType.PROPERTY );
     }
 
-    public static class Creator implements StoreFileType.StoreCreator {
+    public static class Initializer implements StoreFileType.StoreInitializer
+    {
 
         @Override
-        public void create( String fileName, Map<?, ?> config )
+        public void initialize( String fileName, Map<?, ?> config )
         {
             IdGeneratorFactory idGeneratorFactory = (IdGeneratorFactory) config.get(
                     IdGeneratorFactory.class );

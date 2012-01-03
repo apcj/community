@@ -39,11 +39,11 @@ public class PropertyIndexStore extends AbstractNameStore<PropertyIndexRecord>
         super( fileName, config, IdType.PROPERTY_INDEX );
     }
 
-    public static class Creator implements StoreFileType.StoreCreator
+    public static class Initializer implements StoreFileType.StoreInitializer
     {
 
         @Override
-        public void create( String fileName, Map<?, ?> config )
+        public void initialize( String fileName, Map<?, ?> config )
         {
             IdGeneratorFactory idGeneratorFactory = (IdGeneratorFactory) config.get(
                     IdGeneratorFactory.class );

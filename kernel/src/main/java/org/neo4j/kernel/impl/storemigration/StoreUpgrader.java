@@ -93,7 +93,7 @@ public class StoreUpgrader
         Map<Object, Object> upgradeConfig = new HashMap<Object, Object>( originalConfig );
         upgradeConfig.put( "neo_store", upgradeFileName );
 
-        StoreFileType.NeoStore.createStore( upgradeFileName, upgradeConfig );
+        StoreFileType.Neo.createStore( upgradeFileName, upgradeConfig );
         NeoStore neoStore = new NeoStore( upgradeConfig );
         try
         {

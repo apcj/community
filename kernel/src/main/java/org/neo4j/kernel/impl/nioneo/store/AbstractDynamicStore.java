@@ -75,7 +75,7 @@ public abstract class AbstractDynamicStore extends CommonAbstractStore implement
      * @throws IOException
      *             If fileName is null or if file exists or illegal block size
      */
-    protected static void createEmptyStore( String fileName, int baseBlockSize,
+    public static void createEmptyStore( String fileName, int baseBlockSize,
         String typeAndVersionDescriptor, IdGeneratorFactory idGeneratorFactory,
         FileSystemAbstraction fileSystem, IdType idType )
     {
