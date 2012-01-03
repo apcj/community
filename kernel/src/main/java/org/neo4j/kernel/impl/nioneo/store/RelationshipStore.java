@@ -79,20 +79,6 @@ public class RelationshipStore extends AbstractStore implements Store, RecordSto
         super.close();
     }
 
-    public static class Initializer implements StoreFileType.StoreInitializer
-    {
-
-        public void initialize( String fileName, Map<?, ?> config )
-        {
-            IdGeneratorFactory idGeneratorFactory = (IdGeneratorFactory) config.get(
-                    IdGeneratorFactory.class );
-
-            FileSystemAbstraction fileSystem = (FileSystemAbstraction) config.get( FileSystemAbstraction.class );
-
-            createEmptyStore( fileName, buildTypeDescriptorAndVersion( TYPE_DESCRIPTOR ), idGeneratorFactory, fileSystem );
-        }
-    }
-
     public RelationshipRecord getRecord( long id )
     {
         PersistenceWindow window = acquireWindow( id, OperationType.READ );

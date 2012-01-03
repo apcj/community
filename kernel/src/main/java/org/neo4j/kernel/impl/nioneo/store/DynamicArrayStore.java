@@ -61,31 +61,6 @@ public class DynamicArrayStore extends AbstractDynamicStore
         return TYPE_DESCRIPTOR;
     }
 
-    public static class Initializer implements StoreFileType.StoreInitializer
-    {
-
-        @Override
-        public void initialize( String fileName, Map<?, ?> config )
-        {
-            IdGeneratorFactory idGeneratorFactory = (IdGeneratorFactory) config.get(
-                    IdGeneratorFactory.class );
-
-            FileSystemAbstraction fileSystem = (FileSystemAbstraction) config.get( FileSystemAbstraction.class );
-
-            int arrayStoreBlockSize = DEFAULT_DATA_BLOCK_SIZE;
-            String arrayBlockSize = (String) config.get( ARRAY_BLOCK_SIZE );
-            if ( arrayBlockSize != null )
-            {
-                int value = Integer.parseInt( arrayBlockSize );
-                if ( value > 0 )
-                {
-                    arrayStoreBlockSize = value;
-                }
-            }
-            createEmptyStore( fileName, arrayStoreBlockSize, VERSION, idGeneratorFactory, fileSystem, IdType.ARRAY_BLOCK );
-        }
-    }
-
     public static class BlockSizeConfiguration implements StoreFileType.DynamicRecordLength.RecordLengthConfiguration {
 
         public int getBlockSize( Map<?, ?> config )

@@ -55,62 +55,6 @@ public class DynamicStringStore extends AbstractDynamicStore
         return TYPE_DESCRIPTOR;
     }
 
-    public static class Initializer implements StoreFileType.StoreInitializer
-    {
-        private final IdType idType;
-        private final int blockSize;
-        private static final int NULL_BLOCKSIZE = 0;
-
-        public Initializer()
-        {
-            this.idType = IdType.STRING_BLOCK;
-            this.blockSize = NULL_BLOCKSIZE;
-        }
-
-        public Initializer( IdType idType, int blockSize )
-        {
-            this.idType = idType;
-            this.blockSize = blockSize;
-        }
-
-        public void initialize( String fileName, Map<?, ?> config )
-        {
-            IdGeneratorFactory idGeneratorFactory = (IdGeneratorFactory) config.get(
-                    IdGeneratorFactory.class );
-
-            FileSystemAbstraction fileSystem = (FileSystemAbstraction) config.get( FileSystemAbstraction.class );
-
-            createEmptyStore( fileName, getBlockSize( config ), VERSION, idGeneratorFactory, fileSystem, idType );
-        }
-
-        private int getBlockSize( Map<?, ?> config )
-        {
-            if ( blockSize == NULL_BLOCKSIZE )
-            {
-                return parseConfiguredBlockSize( config );
-            }
-
-            return blockSize;
-        }
-
-        private int parseConfiguredBlockSize( Map<?, ?> config )
-        {
-            int size = DEFAULT_DATA_BLOCK_SIZE;
-
-            String stringBlockSize = (String) config.get( STRING_BLOCK_SIZE );
-            if ( stringBlockSize != null )
-            {
-                int value = Integer.parseInt( stringBlockSize );
-                if ( value > 0 )
-                {
-                    size = value;
-                }
-            }
-
-            return size;
-        }
-    }
-
     public static class BlockSizeConfiguration implements StoreFileType.DynamicRecordLength.RecordLengthConfiguration {
 
         public int getBlockSize( Map<?, ?> config )

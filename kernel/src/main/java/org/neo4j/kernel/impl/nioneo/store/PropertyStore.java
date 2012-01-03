@@ -59,21 +59,6 @@ public class PropertyStore extends AbstractStore implements Store, RecordStore<P
         super( fileName, config, IdType.PROPERTY );
     }
 
-    public static class Initializer implements StoreFileType.StoreInitializer
-    {
-
-        @Override
-        public void initialize( String fileName, Map<?, ?> config )
-        {
-            IdGeneratorFactory idGeneratorFactory = (IdGeneratorFactory) config.get(
-                    IdGeneratorFactory.class );
-
-            FileSystemAbstraction fileSystem = (FileSystemAbstraction) config.get( FileSystemAbstraction.class );
-
-            createEmptyStore( fileName, buildTypeDescriptorAndVersion( TYPE_DESCRIPTOR ), idGeneratorFactory, fileSystem );
-        }
-    }
-
     @Override
     public void accept( RecordStore.Processor processor, PropertyRecord record )
     {

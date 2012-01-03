@@ -50,35 +50,6 @@ public class RelationshipTypeStore extends AbstractNameStore<RelationshipTypeRec
         processor.processRelationshipType( this, record );
     }
 
-    public static class Initializer implements StoreFileType.StoreInitializer
-    {
-        @Override
-        public void initialize( String fileName, Map<?, ?> config )
-        {
-            IdGeneratorFactory idGeneratorFactory = (IdGeneratorFactory) config.get(
-                    IdGeneratorFactory.class );
-
-            FileSystemAbstraction fileSystem = (FileSystemAbstraction) config.get( FileSystemAbstraction.class );
-
-            createEmptyStore( fileName, buildTypeDescriptorAndVersion( TYPE_DESCRIPTOR ), idGeneratorFactory, fileSystem );
-            RelationshipTypeStore store = new RelationshipTypeStore( fileName, config );
-            store.close();
-        }
-    }
-
-    void markAsReserved( int id )
-    {
-        PersistenceWindow window = acquireWindow( id, OperationType.WRITE );
-        try
-        {
-            markAsReserved( id, window );
-        }
-        finally
-        {
-            releaseWindow( window );
-        }
-    }
-
     private void markAsReserved( int id, PersistenceWindow window )
     {
         Buffer buffer = window.getOffsettedBuffer( id );
