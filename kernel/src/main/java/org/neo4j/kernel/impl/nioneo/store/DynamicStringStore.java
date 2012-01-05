@@ -24,6 +24,7 @@ import static org.neo4j.kernel.Config.STRING_BLOCK_SIZE;
 import java.util.Map;
 
 import org.neo4j.kernel.IdType;
+import org.neo4j.kernel.impl.nioneo.store.structure.StoreFileFactory;
 import org.neo4j.kernel.impl.nioneo.store.structure.StoreFileType;
 
 /**
@@ -44,7 +45,7 @@ public class DynamicStringStore extends AbstractDynamicStore
         processor.processString( this, record );
     }
 
-    public static class BlockSizeConfiguration implements StoreFileType.DynamicRecordLength.RecordLengthConfiguration {
+    public static class BlockSizeConfiguration implements StoreFileFactory.ConfigurableRecordLength.RecordLengthConfiguration {
 
         public int getBlockSize( Map<?, ?> config )
         {
@@ -64,7 +65,7 @@ public class DynamicStringStore extends AbstractDynamicStore
         }
     }
 
-    public static class FixedBlockSize implements StoreFileType.DynamicRecordLength.RecordLengthConfiguration {
+    public static class FixedBlockSize implements StoreFileFactory.ConfigurableRecordLength.RecordLengthConfiguration {
 
         private final int blockSize;
 

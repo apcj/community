@@ -21,71 +21,81 @@ package org.neo4j.kernel.impl.nioneo.store.structure;
 
 import static org.neo4j.kernel.impl.nioneo.store.PropertyIndexStore.KEY_STORE_BLOCK_SIZE;
 import static org.neo4j.kernel.impl.nioneo.store.RelationshipTypeStore.TYPE_STORE_BLOCK_SIZE;
+import static org.neo4j.kernel.impl.nioneo.store.structure.StoreFileFactory.ConfigurableRecordLength.configurableRecordLength;
+import static org.neo4j.kernel.impl.nioneo.store.structure.StoreFileFactory.FixedRecordLength.fixedRecordLength;
+import static org.neo4j.kernel.impl.nioneo.store.structure.StoreInitializer.NullStoreInitializer.startsEmpty;
 
 import java.util.Map;
 
-import org.neo4j.kernel.IdGeneratorFactory;
 import org.neo4j.kernel.IdType;
-import org.neo4j.kernel.impl.nioneo.store.AbstractDynamicStore;
-import org.neo4j.kernel.impl.nioneo.store.AbstractStore;
 import org.neo4j.kernel.impl.nioneo.store.CommonAbstractStore;
 import org.neo4j.kernel.impl.nioneo.store.DynamicArrayStore;
 import org.neo4j.kernel.impl.nioneo.store.DynamicStringStore;
-import org.neo4j.kernel.impl.nioneo.store.FileSystemAbstraction;
 import org.neo4j.kernel.impl.nioneo.store.NeoStore;
 import org.neo4j.kernel.impl.nioneo.store.NodeStore;
-import org.neo4j.kernel.impl.nioneo.store.PropertyIndexStore;
-import org.neo4j.kernel.impl.nioneo.store.PropertyStore;
-import org.neo4j.kernel.impl.nioneo.store.RelationshipStore;
-import org.neo4j.kernel.impl.nioneo.store.RelationshipTypeStore;
 
 public enum StoreFileType
 {
     String( "strings", "StringPropertyStore",
-            new DynamicRecordLength( new DynamicStringStore.BlockSizeConfiguration(), IdType.STRING_BLOCK ) ),
+            configurableRecordLength( new DynamicStringStore.BlockSizeConfiguration(),
+                    IdType.STRING_BLOCK ), startsEmpty() ),
+
     Array( "arrays", "ArrayPropertyStore",
-            new DynamicRecordLength( new DynamicArrayStore.BlockSizeConfiguration(), IdType.ARRAY_BLOCK )),
+            configurableRecordLength( new DynamicArrayStore.BlockSizeConfiguration(),
+                    IdType.ARRAY_BLOCK ), startsEmpty() ),
+
     RelationshipTypeName( "names", "StringPropertyStore",
-            new DynamicRecordLength( new DynamicStringStore.FixedBlockSize( TYPE_STORE_BLOCK_SIZE ),
-                    IdType.RELATIONSHIP_TYPE_BLOCK) ),
+            configurableRecordLength( new DynamicStringStore.FixedBlockSize( TYPE_STORE_BLOCK_SIZE ),
+                    IdType.RELATIONSHIP_TYPE_BLOCK), startsEmpty() ),
+
     PropertyIndexKey( "keys", "StringPropertyStore",
-            new DynamicRecordLength( new DynamicStringStore.FixedBlockSize( KEY_STORE_BLOCK_SIZE ),
-                    IdType.PROPERTY_INDEX_BLOCK) ),
-    PropertyIndex( "index", "PropertyIndexStore", new FixedRecordLength(),
-            PropertyIndexKey ),
-    Property( "propertystore.db", "PropertyStore", new FixedRecordLength(),
-            String,
-            Array,
-            PropertyIndex ),
-    Node( "nodestore.db", "NodeStore", new FixedRecordLength(), new NodeStore.Initializer() ),
-    Relationship( "relationshipstore.db", "NodeStore", new FixedRecordLength() ),
-    RelationshipType( "relationshiptypestore.db", "RelationshipTypeStore", new FixedRecordLength(),
-            RelationshipTypeName ),
-    Neo( "neostore", "NeoStore", new FixedRecordLength(),
-            new NeoStore.Initializer(),
-            Property,
-            Node,
-            Relationship,
-            RelationshipType );
+            configurableRecordLength( new DynamicStringStore.FixedBlockSize( KEY_STORE_BLOCK_SIZE ),
+                    IdType.PROPERTY_INDEX_BLOCK), startsEmpty() ),
+
+    PropertyIndex( "index", "PropertyIndexStore",
+            fixedRecordLength(), startsEmpty(),
+            childStores( PropertyIndexKey ) ),
+
+    Property( "propertystore.db", "PropertyStore",
+            fixedRecordLength(), startsEmpty(),
+            childStores( String, Array, PropertyIndex ) ),
+
+    Node( "nodestore.db", "NodeStore",
+            fixedRecordLength(), new NodeStore.CreateReferenceNode() ),
+
+    Relationship( "relationshipstore.db", "NodeStore",
+            fixedRecordLength(), startsEmpty() ),
+
+    RelationshipType( "relationshiptypestore.db", "RelationshipTypeStore",
+            fixedRecordLength(), startsEmpty(),
+            childStores( RelationshipTypeName ) ),
+
+    Neo( "neostore", "NeoStore",
+            fixedRecordLength(), new NeoStore.StoreMetadata(),
+            childStores( Property, Node, Relationship, RelationshipType ));
 
     public final String fileNamePart;
     public final String typeDescriptor;
-    private StoreFileFamily family;
+    private StoreFileFactory factory;
     private StoreInitializer initializer;
     private StoreFileType[] childStoreFiles;
 
-    StoreFileType( String fileNamePart, String typeDescriptor, StoreFileFamily family, StoreInitializer initializer, StoreFileType... childStoreFiles )
+    StoreFileType( String fileNamePart, String typeDescriptor, StoreFileFactory factory, StoreInitializer initializer, StoreFileType[] childStoreFiles )
     {
         this.fileNamePart = fileNamePart;
         this.typeDescriptor = typeDescriptor;
-        this.family = family;
+        this.factory = factory;
         this.initializer = initializer;
         this.childStoreFiles = childStoreFiles;
     }
 
-    StoreFileType( String fileNamePart, String typeDescriptor, StoreFileFamily family, StoreFileType... childStoreFiles )
+    StoreFileType( String fileNamePart, String typeDescriptor, StoreFileFactory factory, StoreInitializer initializer )
     {
-        this(fileNamePart, typeDescriptor, family, new NullStoreInitializer(), childStoreFiles);
+        this(fileNamePart, typeDescriptor, factory, initializer, childStores());
+    }
+
+    private static StoreFileType[] childStores(StoreFileType... childStoreFiles) {
+        return childStoreFiles;
     }
 
     public void createStore( String fileName, Map<?, ?> config )
@@ -95,64 +105,8 @@ public enum StoreFileType
             childStoreFile.createStore(fileName + "." + childStoreFile.fileNamePart, config );
         }
 
-        family.createStore( fileName, CommonAbstractStore.buildTypeDescriptorAndVersion( typeDescriptor ), config );
+        factory.createStore( fileName, CommonAbstractStore.buildTypeDescriptorAndVersion( typeDescriptor ), config );
         initializer.initialize( fileName, config );
     }
 
-    public interface StoreInitializer
-    {
-        void initialize( String fileName, Map<?, ?> config );
-    }
-
-    public static class FixedRecordLength implements StoreFileFamily
-    {
-        public void createStore( String fileName, String typeAndVersionDescriptor, Map<?, ?> config )
-        {
-            IdGeneratorFactory idGeneratorFactory = (IdGeneratorFactory) config.get(
-                    IdGeneratorFactory.class );
-
-            FileSystemAbstraction fileSystem = (FileSystemAbstraction) config.get( FileSystemAbstraction.class );
-
-            AbstractStore.createEmptyStore( fileName, typeAndVersionDescriptor, idGeneratorFactory, fileSystem );
-        }
-    }
-
-    public static class DynamicRecordLength implements StoreFileFamily
-    {
-        private RecordLengthConfiguration recordLengthConfiguration;
-        private IdType idType;
-
-        public DynamicRecordLength( RecordLengthConfiguration recordLengthConfiguration, IdType idType )
-        {
-            this.recordLengthConfiguration = recordLengthConfiguration;
-            this.idType = idType;
-        }
-
-        public void createStore( String fileName, String typeAndVersionDescriptor, Map<?, ?> config )
-        {
-            IdGeneratorFactory idGeneratorFactory = (IdGeneratorFactory) config.get(
-                    IdGeneratorFactory.class );
-
-            FileSystemAbstraction fileSystem = (FileSystemAbstraction) config.get( FileSystemAbstraction.class );
-
-            AbstractDynamicStore.createEmptyStore( fileName, recordLengthConfiguration.getBlockSize( config ), typeAndVersionDescriptor, idGeneratorFactory, fileSystem, idType );
-        }
-
-        public interface RecordLengthConfiguration
-        {
-            public int getBlockSize( Map<?, ?> config );
-        }
-    }
-
-    interface StoreFileFamily {
-
-        void createStore( String fileName, String typeAndVersionDescriptor, Map<?, ?> config );
-    }
-
-    private static class NullStoreInitializer implements StoreInitializer
-    {
-        public void initialize( String fileName, Map<?, ?> config )
-        {
-        }
-    }
 }

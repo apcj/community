@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.neo4j.kernel.IdType;
+import org.neo4j.kernel.impl.nioneo.store.structure.StoreFileFactory;
 import org.neo4j.kernel.impl.nioneo.store.structure.StoreFileType;
 import org.neo4j.kernel.impl.util.Bits;
 
@@ -53,7 +54,7 @@ public class DynamicArrayStore extends AbstractDynamicStore
         processor.processArray( this, record );
     }
 
-    public static class BlockSizeConfiguration implements StoreFileType.DynamicRecordLength.RecordLengthConfiguration {
+    public static class BlockSizeConfiguration implements StoreFileFactory.ConfigurableRecordLength.RecordLengthConfiguration {
 
         public int getBlockSize( Map<?, ?> config )
         {

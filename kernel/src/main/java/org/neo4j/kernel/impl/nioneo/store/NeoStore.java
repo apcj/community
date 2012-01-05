@@ -34,6 +34,7 @@ import org.neo4j.kernel.IdGeneratorFactory;
 import org.neo4j.kernel.IdType;
 import org.neo4j.kernel.impl.core.LastCommittedTxIdSetter;
 import org.neo4j.kernel.impl.nioneo.store.structure.StoreFileType;
+import org.neo4j.kernel.impl.nioneo.store.structure.StoreInitializer;
 import org.neo4j.kernel.impl.storemigration.ConfigMapUpgradeConfiguration;
 import org.neo4j.kernel.impl.storemigration.DatabaseFiles;
 import org.neo4j.kernel.impl.storemigration.StoreMigrator;
@@ -299,7 +300,7 @@ public class NeoStore extends AbstractStore
         return txHook;
     }
 
-    public static class Initializer implements StoreFileType.StoreInitializer
+    public static class StoreMetadata implements StoreInitializer
     {
         @Override
         public void initialize( String fileName, Map<?, ?> config )

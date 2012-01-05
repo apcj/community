@@ -25,6 +25,7 @@ import java.util.Map;
 
 import org.neo4j.kernel.IdType;
 import org.neo4j.kernel.impl.nioneo.store.structure.StoreFileType;
+import org.neo4j.kernel.impl.nioneo.store.structure.StoreInitializer;
 import org.neo4j.kernel.impl.util.StringLogger;
 
 /**
@@ -58,9 +59,8 @@ public class NodeStore extends AbstractStore implements Store, RecordStore<NodeR
         return getRecordSize();
     }
 
-    public static class Initializer implements StoreFileType.StoreInitializer
+    public static class CreateReferenceNode implements StoreInitializer
     {
-
         public void initialize( String fileName, Map<?, ?> config )
         {
             NodeStore store = new NodeStore( fileName, config );
