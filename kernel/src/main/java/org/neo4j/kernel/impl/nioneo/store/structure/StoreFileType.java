@@ -79,6 +79,7 @@ public enum StoreFileType
     private StoreFileFactory factory;
     private StoreInitializer initializer;
     private StoreFileType[] childStoreFiles;
+    private StoreFileType parentStoreFile;
 
     StoreFileType( String fileNamePart, String typeDescriptor, StoreFileFactory factory, StoreInitializer initializer, StoreFileType[] childStoreFiles )
     {
@@ -87,6 +88,10 @@ public enum StoreFileType
         this.factory = factory;
         this.initializer = initializer;
         this.childStoreFiles = childStoreFiles;
+        for ( StoreFileType childStoreFile : childStoreFiles )
+        {
+            childStoreFile.parentStoreFile = this;
+        }
     }
 
     StoreFileType( String fileNamePart, String typeDescriptor, StoreFileFactory factory, StoreInitializer initializer )
@@ -109,4 +114,11 @@ public enum StoreFileType
         initializer.initialize( fileName, config );
     }
 
+    public String getFileName()
+    {
+        if (parentStoreFile == null) {
+            return fileNamePart;
+        }
+        return parentStoreFile.getFileName() + "." + fileNamePart;
+    }
 }

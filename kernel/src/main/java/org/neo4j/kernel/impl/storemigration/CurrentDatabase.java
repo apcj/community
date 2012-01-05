@@ -42,32 +42,16 @@ import org.neo4j.kernel.impl.nioneo.store.structure.StoreFileType;
 
 public class CurrentDatabase
 {
-    private Map<String, String> fileNamesToTypeDescriptors = new HashMap<String, String>();
-
-    public CurrentDatabase()
-    {
-        fileNamesToTypeDescriptors.put( NeoStore.DEFAULT_NAME, StoreFileType.Neo.typeDescriptor );
-        fileNamesToTypeDescriptors.put( "neostore.nodestore.db", StoreFileType.Node.typeDescriptor );
-        fileNamesToTypeDescriptors.put( "neostore.propertystore.db", StoreFileType.Property.typeDescriptor );
-        fileNamesToTypeDescriptors.put( "neostore.propertystore.db.arrays", StoreFileType.Array.typeDescriptor );
-        fileNamesToTypeDescriptors.put( "neostore.propertystore.db.index", StoreFileType.PropertyIndex.typeDescriptor );
-        fileNamesToTypeDescriptors.put( "neostore.propertystore.db.index.keys", StoreFileType.PropertyIndexKey.typeDescriptor );
-        fileNamesToTypeDescriptors.put( "neostore.propertystore.db.strings", StoreFileType.String.typeDescriptor );
-        fileNamesToTypeDescriptors.put( "neostore.relationshipstore.db", StoreFileType.Relationship.typeDescriptor );
-        fileNamesToTypeDescriptors.put( "neostore.relationshiptypestore.db", StoreFileType.RelationshipType.typeDescriptor );
-        fileNamesToTypeDescriptors.put( "neostore.relationshiptypestore.db.names", StoreFileType.RelationshipTypeName.typeDescriptor );
-    }
-
     public boolean storeFilesAtCurrentVersion( File storeDirectory )
     {
-        for ( String fileName : fileNamesToTypeDescriptors.keySet() )
+        for ( StoreFileType storeFileType : StoreFileType.values() )
         {
-            String expectedVersion = buildTypeDescriptorAndVersion( fileNamesToTypeDescriptors.get( fileName ) );
+            String expectedVersion = buildTypeDescriptorAndVersion( storeFileType.typeDescriptor );
             FileChannel fileChannel = null;
             byte[] expectedVersionBytes = UTF8.encode( expectedVersion );
             try
             {
-                File storeFile = new File( storeDirectory, fileName );
+                File storeFile = new File( storeDirectory, storeFileType.getFileName() );
                 if ( !storeFile.exists() )
                 {
                     return false;
