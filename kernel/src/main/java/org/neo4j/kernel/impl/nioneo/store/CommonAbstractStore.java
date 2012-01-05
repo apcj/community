@@ -602,6 +602,11 @@ public abstract class CommonAbstractStore
         return storageFileName;
     }
 
+    protected String childStorageFileName(String suffix)
+    {
+        return storageFileName + "." + suffix;
+    }
+
     /**
      * Opens the {@link IdGenerator} used by this store.
      */

@@ -41,78 +41,62 @@ import org.neo4j.kernel.impl.nioneo.store.RelationshipTypeStore;
 
 public enum StoreFileType
 {
-    String( DynamicStringStore.TYPE_DESCRIPTOR,
+    String( "strings", DynamicStringStore.TYPE_DESCRIPTOR,
             new DynamicRecordLength( new DynamicStringStore.BlockSizeConfiguration(), IdType.STRING_BLOCK ) ),
-    Array( DynamicArrayStore.TYPE_DESCRIPTOR,
+    Array( "arrays", DynamicArrayStore.TYPE_DESCRIPTOR,
             new DynamicRecordLength( new DynamicArrayStore.BlockSizeConfiguration(), IdType.ARRAY_BLOCK )),
-    RelationshipTypeName( DynamicStringStore.TYPE_DESCRIPTOR,
+    RelationshipTypeName( "names", DynamicStringStore.TYPE_DESCRIPTOR,
             new DynamicRecordLength( new DynamicStringStore.FixedBlockSize( TYPE_STORE_BLOCK_SIZE ),
                     IdType.RELATIONSHIP_TYPE_BLOCK) ),
-    PropertyIndexKey( DynamicStringStore.TYPE_DESCRIPTOR,
+    PropertyIndexKey( "keys", DynamicStringStore.TYPE_DESCRIPTOR,
             new DynamicRecordLength( new DynamicStringStore.FixedBlockSize( KEY_STORE_BLOCK_SIZE ),
                     IdType.PROPERTY_INDEX_BLOCK) ),
-    PropertyIndex( PropertyIndexStore.TYPE_DESCRIPTOR, new FixedRecordLength(),
-            child( "keys", PropertyIndexKey ) ),
-    Property( PropertyStore.TYPE_DESCRIPTOR, new FixedRecordLength(),
-            child( "strings", String ),
-            child( "arrays", Array ),
-            child( "index", PropertyIndex ) ),
-    Node( NodeStore.TYPE_DESCRIPTOR, new FixedRecordLength(), new NodeStore.Initializer() ),
-    Relationship( RelationshipStore.TYPE_DESCRIPTOR, new FixedRecordLength() ),
-    RelationshipType( RelationshipTypeStore.TYPE_DESCRIPTOR, new FixedRecordLength(),
-            child( "names", RelationshipTypeName ) ),
-    Neo( org.neo4j.kernel.impl.nioneo.store.NeoStore.TYPE_DESCRIPTOR, new FixedRecordLength(),
+    PropertyIndex( "index", PropertyIndexStore.TYPE_DESCRIPTOR, new FixedRecordLength(),
+            PropertyIndexKey ),
+    Property( "propertystore.db", PropertyStore.TYPE_DESCRIPTOR, new FixedRecordLength(),
+            String,
+            Array,
+            PropertyIndex ),
+    Node( "nodestore.db", NodeStore.TYPE_DESCRIPTOR, new FixedRecordLength(), new NodeStore.Initializer() ),
+    Relationship( "relationshipstore.db", RelationshipStore.TYPE_DESCRIPTOR, new FixedRecordLength() ),
+    RelationshipType( "relationshiptypestore.db", RelationshipTypeStore.TYPE_DESCRIPTOR, new FixedRecordLength(),
+            RelationshipTypeName ),
+    Neo( "neostore", NeoStore.TYPE_DESCRIPTOR, new FixedRecordLength(),
             new NeoStore.Initializer(),
-            child( "propertystore.db", Property ),
-            child( "nodestore.db", Node ),
-            child( "relationshipstore.db", Relationship ),
-            child( "relationshiptypestore.db", RelationshipType ) );
+            Property,
+            Node,
+            Relationship,
+            RelationshipType );
 
+    public final String fileNamePart;
     private String typeDescriptor;
     private StoreFileFamily family;
     private StoreInitializer initializer;
-    private ChildStoreFile[] childStoreFiles;
+    private StoreFileType[] childStoreFiles;
 
-    StoreFileType( String typeDescriptor, StoreFileFamily family, StoreInitializer initializer, ChildStoreFile... childStoreFiles )
+    StoreFileType( String fileNamePart, String typeDescriptor, StoreFileFamily family, StoreInitializer initializer, StoreFileType... childStoreFiles )
     {
+        this.fileNamePart = fileNamePart;
         this.typeDescriptor = typeDescriptor;
         this.family = family;
         this.initializer = initializer;
         this.childStoreFiles = childStoreFiles;
     }
 
-    StoreFileType( String typeDescriptor, StoreFileFamily family, ChildStoreFile... childStoreFiles )
+    StoreFileType( String fileNamePart, String typeDescriptor, StoreFileFamily family, StoreFileType... childStoreFiles )
     {
-        this(typeDescriptor, family, new NullStoreInitializer(), childStoreFiles);
+        this(fileNamePart, typeDescriptor, family, new NullStoreInitializer(), childStoreFiles);
     }
 
     public void createStore( String fileName, Map<?, ?> config )
     {
-        for ( ChildStoreFile childStoreFile : childStoreFiles )
+        for ( StoreFileType childStoreFile : childStoreFiles )
         {
-            childStoreFile.storeFileType.createStore(
-                    fileName + "." + childStoreFile.fileNamePart, config );
+            childStoreFile.createStore(fileName + "." + childStoreFile.fileNamePart, config );
         }
 
         family.createStore( fileName, CommonAbstractStore.buildTypeDescriptorAndVersion( typeDescriptor ), config );
         initializer.initialize( fileName, config );
-    }
-
-    static ChildStoreFile child( String fileNamePart, StoreFileType storeFileType )
-    {
-        return new ChildStoreFile( fileNamePart, storeFileType );
-    }
-
-    private static class ChildStoreFile
-    {
-        private final String fileNamePart;
-        private final StoreFileType storeFileType;
-
-        ChildStoreFile( String fileNamePart, StoreFileType storeFileType )
-        {
-            this.fileNamePart = fileNamePart;
-            this.storeFileType = storeFileType;
-        }
     }
 
     public interface StoreInitializer

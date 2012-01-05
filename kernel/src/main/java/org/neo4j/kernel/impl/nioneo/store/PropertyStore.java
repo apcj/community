@@ -28,7 +28,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.neo4j.helpers.UTF8;
-import org.neo4j.kernel.IdGeneratorFactory;
 import org.neo4j.kernel.IdType;
 import org.neo4j.kernel.impl.nioneo.store.structure.StoreFileType;
 import org.neo4j.kernel.impl.util.StringLogger;
@@ -78,12 +77,12 @@ public class PropertyStore extends AbstractStore implements Store, RecordStore<P
     @Override
     protected void initStorage()
     {
-        stringPropertyStore = new DynamicStringStore( getStorageFileName()
-            + ".strings", getConfig(), IdType.STRING_BLOCK );
-        propertyIndexStore = new PropertyIndexStore( getStorageFileName()
-            + ".index", getConfig() );
-        arrayPropertyStore = new DynamicArrayStore( getStorageFileName()
-            + ".arrays", getConfig(), IdType.ARRAY_BLOCK );
+        stringPropertyStore = new DynamicStringStore( childStorageFileName( StoreFileType.String.fileNamePart ),
+            getConfig(), IdType.STRING_BLOCK );
+        propertyIndexStore = new PropertyIndexStore( childStorageFileName( StoreFileType.PropertyIndex.fileNamePart ),
+            getConfig() );
+        arrayPropertyStore = new DynamicArrayStore( childStorageFileName( StoreFileType.Array.fileNamePart ),
+            getConfig(), IdType.ARRAY_BLOCK );
     }
 
     @Override

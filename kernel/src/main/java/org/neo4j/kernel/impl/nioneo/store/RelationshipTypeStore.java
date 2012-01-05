@@ -129,7 +129,7 @@ public class RelationshipTypeStore extends AbstractNameStore<RelationshipTypeRec
     @Override
     protected String getNameStorePostfix()
     {
-        return ".names";
+        return StoreFileType.RelationshipTypeName.fileNamePart;
     }
 
     @Override

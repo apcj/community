@@ -74,7 +74,7 @@ public class PropertyIndexStore extends AbstractNameStore<PropertyIndexRecord>
     @Override
     protected String getNameStorePostfix()
     {
-        return ".keys";
+        return StoreFileType.PropertyIndexKey.fileNamePart;
     }
 
     @Override

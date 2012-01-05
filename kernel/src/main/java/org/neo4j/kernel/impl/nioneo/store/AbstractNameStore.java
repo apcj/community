@@ -42,7 +42,7 @@ public abstract class AbstractNameStore<T extends AbstractNameRecord> extends Ab
     @Override
     protected void initStorage()
     {
-        nameStore = new DynamicStringStore( getStorageFileName() + getNameStorePostfix(), getConfig(), getNameIdType() );
+        nameStore = new DynamicStringStore( getStorageFileName() + "." + getNameStorePostfix(), getConfig(), getNameIdType() );
     }
     
     protected abstract IdType getNameIdType();
