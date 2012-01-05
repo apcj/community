@@ -21,6 +21,7 @@ package org.neo4j.kernel.impl.nioneo.store;
 
 import java.io.IOException;
 
+import org.neo4j.kernel.impl.nioneo.store.structure.StoreFileType;
 import org.neo4j.kernel.impl.util.StringLogger;
 
 /**
@@ -38,7 +39,7 @@ public interface Store
      */
     public long nextId();
 
-    public String getTypeDescriptor();
+    public StoreFileType getStoreFileType();
 
     public long getHighestPossibleIdInUse();
 

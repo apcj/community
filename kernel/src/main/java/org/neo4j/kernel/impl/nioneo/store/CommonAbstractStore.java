@@ -32,6 +32,7 @@ import org.neo4j.kernel.Config;
 import org.neo4j.kernel.IdGeneratorFactory;
 import org.neo4j.kernel.IdType;
 import org.neo4j.kernel.impl.core.ReadOnlyDbException;
+import org.neo4j.kernel.impl.nioneo.store.structure.StoreFileType;
 import org.neo4j.kernel.impl.util.StringLogger;
 
 /**
@@ -46,6 +47,7 @@ public abstract class CommonAbstractStore
     protected static final Logger logger = Logger
         .getLogger( CommonAbstractStore.class.getName() );
 
+    public final StoreFileType storeFileType;
     protected final String storageFileName;
     private final IdType idType;
     private IdGeneratorFactory idGeneratorFactory = null;
@@ -76,15 +78,18 @@ public abstract class CommonAbstractStore
      * throws IOException if the unable to open the storage or if the
      * <CODE>initStorage</CODE> method fails
      *
+     * @param storeFileType
+     *            The type of the store
      * @param fileName
-     *            The name of the store
+     *            The name of the underlying store file
      * @param config
      *            The configuration for store (may be null)
      * @param idType
      *            The Id used to index into this store
      */
-    public CommonAbstractStore( String fileName, Map<?,?> config, IdType idType )
+    public CommonAbstractStore( StoreFileType storeFileType, String fileName, Map<?,?> config, IdType idType )
     {
+        this.storeFileType = storeFileType;
         this.storageFileName = fileName;
         this.config = config;
         this.idType = idType;
@@ -107,7 +112,7 @@ public abstract class CommonAbstractStore
 
     public String getTypeAndVersionDescriptor()
     {
-        return buildTypeDescriptorAndVersion( getTypeDescriptor() );
+        return buildTypeDescriptorAndVersion( storeFileType.typeDescriptor );
     }
 
     public static String buildTypeDescriptorAndVersion( String typeDescriptor )
@@ -125,12 +130,9 @@ public abstract class CommonAbstractStore
         return modifier == 0 && base == IdGeneratorImpl.INTEGER_MINUS_ONE ? -1 : base|modifier;
     }
 
-    /**
-     * Returns the type and version that identifies this store.
-     *
-     * @return This store's implementation type and version identifier
-     */
-    public abstract String getTypeDescriptor();
+    public StoreFileType getStoreFileType() {
+        return storeFileType;
+    }
 
     protected void checkStorage()
     {
@@ -283,7 +285,7 @@ public abstract class CommonAbstractStore
 
         if ( !expectedTypeDescriptorAndVersion.equals( foundTypeDescriptorAndVersion ) && !isReadOnly() )
         {
-            if ( foundTypeDescriptorAndVersion.startsWith( getTypeDescriptor() ) )
+            if ( foundTypeDescriptorAndVersion.startsWith( storeFileType.typeDescriptor ) )
             {
                 throw new NotCurrentStoreVersionException( ALL_STORES_VERSION, foundTypeDescriptorAndVersion, "", false );
             }

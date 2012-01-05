@@ -28,7 +28,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import org.neo4j.kernel.IdGeneratorFactory;
 import org.neo4j.kernel.IdType;
 import org.neo4j.kernel.impl.nioneo.store.structure.StoreFileType;
 import org.neo4j.kernel.impl.util.Bits;
@@ -40,25 +39,18 @@ public class DynamicArrayStore extends AbstractDynamicStore
 {
     // store version, each store ends with this string (byte encoded)
     public static final String VERSION = "ArrayPropertyStore v0.A.0";
-    public static final String TYPE_DESCRIPTOR = "ArrayPropertyStore";
 
     public static final int DEFAULT_DATA_BLOCK_SIZE = 120;
 
     public DynamicArrayStore( String fileName, Map<?,?> config, IdType idType )
     {
-        super( fileName, config, idType );
+        super( StoreFileType.Array, fileName, config, idType );
     }
     
     @Override
     public void accept( RecordStore.Processor processor, DynamicRecord record )
     {
         processor.processArray( this, record );
-    }
-
-    @Override
-    public String getTypeDescriptor()
-    {
-        return TYPE_DESCRIPTOR;
     }
 
     public static class BlockSizeConfiguration implements StoreFileType.DynamicRecordLength.RecordLengthConfiguration {

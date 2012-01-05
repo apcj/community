@@ -25,7 +25,6 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.Map;
 
-import org.neo4j.kernel.IdGeneratorFactory;
 import org.neo4j.kernel.IdType;
 import org.neo4j.kernel.impl.nioneo.store.structure.StoreFileType;
 
@@ -35,13 +34,12 @@ import org.neo4j.kernel.impl.nioneo.store.structure.StoreFileType;
  */
 public class RelationshipTypeStore extends AbstractNameStore<RelationshipTypeRecord>
 {
-    public static final String TYPE_DESCRIPTOR = "RelationshipTypeStore";
     private static final int RECORD_SIZE = 1/*inUse*/ + 4/*nameId*/;
     public static final int TYPE_STORE_BLOCK_SIZE = 30;
 
     public RelationshipTypeStore( String fileName, Map<?,?> config )
     {
-        super( fileName, config, IdType.RELATIONSHIP_TYPE );
+        super( StoreFileType.RelationshipType, fileName, config, IdType.RELATIONSHIP_TYPE );
     }
 
     @Override
@@ -127,9 +125,9 @@ public class RelationshipTypeStore extends AbstractNameStore<RelationshipTypeRec
     }
 
     @Override
-    protected String getNameStorePostfix()
+    protected StoreFileType getChildStoreFileType()
     {
-        return StoreFileType.RelationshipTypeName.fileNamePart;
+        return StoreFileType.RelationshipTypeName;
     }
 
     @Override
@@ -138,9 +136,4 @@ public class RelationshipTypeStore extends AbstractNameStore<RelationshipTypeRec
         return RECORD_SIZE;
     }
 
-    @Override
-    public String getTypeDescriptor()
-    {
-        return TYPE_DESCRIPTOR;
-    }
 }

@@ -31,6 +31,7 @@ import org.neo4j.helpers.UTF8;
 import org.neo4j.kernel.IdGeneratorFactory;
 import org.neo4j.kernel.IdType;
 import org.neo4j.kernel.impl.core.ReadOnlyDbException;
+import org.neo4j.kernel.impl.nioneo.store.structure.StoreFileType;
 import org.neo4j.kernel.impl.util.StringLogger;
 
 /**
@@ -115,9 +116,9 @@ public abstract class AbstractStore extends CommonAbstractStore
         idGeneratorFactory.create( fileName + ".id" );
     }
 
-    public AbstractStore( String fileName, Map<?,?> config, IdType idType )
+    public AbstractStore( StoreFileType storeFileType, String fileName, Map<?,?> config, IdType idType )
     {
-        super( fileName, config, idType );
+        super( storeFileType, fileName, config, idType );
     }
 
     @Override
@@ -135,7 +136,7 @@ public abstract class AbstractStore extends CommonAbstractStore
     @Override
     protected void verifyFileSizeAndTruncate() throws IOException
     {
-        int expectedVersionLength = UTF8.encode( buildTypeDescriptorAndVersion( getTypeDescriptor() ) ).length;
+        int expectedVersionLength = UTF8.encode( buildTypeDescriptorAndVersion( storeFileType.typeDescriptor ) ).length;
         long fileSize = getFileChannel().size();
         if ( getRecordSize() != 0
             && (fileSize - expectedVersionLength) % getRecordSize() != 0  && !isReadOnly() )

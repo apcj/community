@@ -52,8 +52,6 @@ import org.neo4j.kernel.impl.util.StringLogger;
  */
 public class NeoStore extends AbstractStore
 {
-    public static final String TYPE_DESCRIPTOR = "NeoStore";
-
     /*
      *  6 longs in header (long + in use), time | random | version | txid | store version | graph next prop
      */
@@ -76,7 +74,7 @@ public class NeoStore extends AbstractStore
 
     public NeoStore( Map<?,?> config )
     {
-        super( (String) config.get( "neo_store" ), config, IdType.NEOSTORE_BLOCK );
+        super( StoreFileType.Neo, (String) config.get( "neo_store" ), config, IdType.NEOSTORE_BLOCK );
         int relGrabSize = DEFAULT_REL_GRAB_SIZE;
         if ( getConfig() != null )
         {
@@ -283,12 +281,6 @@ public class NeoStore extends AbstractStore
         propStore.flushAll();
         relStore.flushAll();
         nodeStore.flushAll();
-    }
-
-    @Override
-    public String getTypeDescriptor()
-    {
-        return TYPE_DESCRIPTOR;
     }
 
     public IdGeneratorFactory getIdGeneratorFactory()
@@ -689,7 +681,7 @@ public class NeoStore extends AbstractStore
 
     public static void logIdUsage( StringLogger.LineLogger logger, Store store )
     {
-        logger.logLine( String.format( "%s: used=%s high=%s", store.getTypeDescriptor(),
+        logger.logLine( String.format( "%s: used=%s high=%s", store.getStoreFileType().typeDescriptor,
                 store.getNumberOfIdsInUse(), store.getHighestPossibleIdInUse() ) );
     }
 

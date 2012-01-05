@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.neo4j.kernel.IdGeneratorFactory;
 import org.neo4j.kernel.IdType;
 import org.neo4j.kernel.impl.nioneo.store.structure.StoreFileType;
 import org.neo4j.kernel.impl.util.StringLogger;
@@ -33,8 +32,6 @@ import org.neo4j.kernel.impl.util.StringLogger;
  */
 public class RelationshipStore extends AbstractStore implements Store, RecordStore<RelationshipRecord>
 {
-    public static final String TYPE_DESCRIPTOR = "RelationshipStore";
-
     // record header size
     // directed|in_use(byte)+first_node(int)+second_node(int)+rel_type(int)+
     // first_prev_rel_id(int)+first_next_rel_id+second_prev_rel_id(int)+
@@ -46,19 +43,13 @@ public class RelationshipStore extends AbstractStore implements Store, RecordSto
      */
     public RelationshipStore( String fileName, Map<?,?> config )
     {
-        super( fileName, config, IdType.RELATIONSHIP );
+        super( StoreFileType.Relationship, fileName, config, IdType.RELATIONSHIP );
     }
 
     @Override
     public void accept( RecordStore.Processor processor, RelationshipRecord record )
     {
         processor.processRelationship( this, record );
-    }
-
-    @Override
-    public String getTypeDescriptor()
-    {
-        return TYPE_DESCRIPTOR;
     }
 
     @Override

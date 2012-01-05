@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.neo4j.kernel.IdType;
+import org.neo4j.kernel.impl.nioneo.store.structure.StoreFileType;
 import org.neo4j.kernel.impl.util.StringLogger;
 
 public abstract class AbstractNameStore<T extends AbstractNameRecord> extends AbstractStore implements Store, RecordStore<T>
@@ -34,20 +35,21 @@ public abstract class AbstractNameStore<T extends AbstractNameRecord> extends Ab
     private DynamicStringStore nameStore;
     protected static final int NAME_STORE_BLOCK_SIZE = 30;
 
-    public AbstractNameStore( String fileName, Map<?, ?> config, IdType idType )
+    public AbstractNameStore( StoreFileType storeFileType, String fileName, Map<?, ?> config, IdType idType )
     {
-        super( fileName, config, idType );
+        super( storeFileType, fileName, config, idType );
     }
     
     @Override
     protected void initStorage()
     {
-        nameStore = new DynamicStringStore( getStorageFileName() + "." + getNameStorePostfix(), getConfig(), getNameIdType() );
+        nameStore = new DynamicStringStore( getChildStoreFileType(),
+                getStorageFileName() + "." + getChildStoreFileType().fileNamePart, getConfig(), getNameIdType() );
     }
     
     protected abstract IdType getNameIdType();
 
-    protected abstract String getNameStorePostfix();
+    protected abstract StoreFileType getChildStoreFileType();
 
     DynamicStringStore getNameStore()
     {

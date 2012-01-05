@@ -21,7 +21,6 @@ package org.neo4j.kernel.impl.nioneo.store;
 
 import java.util.Map;
 
-import org.neo4j.kernel.IdGeneratorFactory;
 import org.neo4j.kernel.IdType;
 import org.neo4j.kernel.impl.nioneo.store.structure.StoreFileType;
 
@@ -30,13 +29,12 @@ import org.neo4j.kernel.impl.nioneo.store.structure.StoreFileType;
  */
 public class PropertyIndexStore extends AbstractNameStore<PropertyIndexRecord>
 {
-    public static final String TYPE_DESCRIPTOR = "PropertyIndexStore";
     public static final int KEY_STORE_BLOCK_SIZE = 30;
     private static final int RECORD_SIZE = 1/*inUse*/ + 4/*prop count*/ + 4/*nameId*/;
 
     public PropertyIndexStore( String fileName, Map<?,?> config )
     {
-        super( fileName, config, IdType.PROPERTY_INDEX );
+        super( StoreFileType.PropertyIndex, fileName, config, IdType.PROPERTY_INDEX );
     }
 
     @Override
@@ -72,9 +70,9 @@ public class PropertyIndexStore extends AbstractNameStore<PropertyIndexRecord>
     }
 
     @Override
-    protected String getNameStorePostfix()
+    protected StoreFileType getChildStoreFileType()
     {
-        return StoreFileType.PropertyIndexKey.fileNamePart;
+        return StoreFileType.PropertyIndexKey;
     }
 
     @Override
@@ -83,9 +81,4 @@ public class PropertyIndexStore extends AbstractNameStore<PropertyIndexRecord>
         return RECORD_SIZE;
     }
 
-    @Override
-    public String getTypeDescriptor()
-    {
-        return TYPE_DESCRIPTOR;
-    }
 }

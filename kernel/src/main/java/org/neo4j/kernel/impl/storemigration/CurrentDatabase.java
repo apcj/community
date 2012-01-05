@@ -38,6 +38,7 @@ import org.neo4j.kernel.impl.nioneo.store.PropertyIndexStore;
 import org.neo4j.kernel.impl.nioneo.store.PropertyStore;
 import org.neo4j.kernel.impl.nioneo.store.RelationshipStore;
 import org.neo4j.kernel.impl.nioneo.store.RelationshipTypeStore;
+import org.neo4j.kernel.impl.nioneo.store.structure.StoreFileType;
 
 public class CurrentDatabase
 {
@@ -45,16 +46,16 @@ public class CurrentDatabase
 
     public CurrentDatabase()
     {
-        fileNamesToTypeDescriptors.put( NeoStore.DEFAULT_NAME, NeoStore.TYPE_DESCRIPTOR );
-        fileNamesToTypeDescriptors.put( "neostore.nodestore.db", NodeStore.TYPE_DESCRIPTOR );
-        fileNamesToTypeDescriptors.put( "neostore.propertystore.db", PropertyStore.TYPE_DESCRIPTOR );
-        fileNamesToTypeDescriptors.put( "neostore.propertystore.db.arrays", DynamicArrayStore.TYPE_DESCRIPTOR );
-        fileNamesToTypeDescriptors.put( "neostore.propertystore.db.index", PropertyIndexStore.TYPE_DESCRIPTOR );
-        fileNamesToTypeDescriptors.put( "neostore.propertystore.db.index.keys", DynamicStringStore.TYPE_DESCRIPTOR );
-        fileNamesToTypeDescriptors.put( "neostore.propertystore.db.strings", DynamicStringStore.TYPE_DESCRIPTOR );
-        fileNamesToTypeDescriptors.put( "neostore.relationshipstore.db", RelationshipStore.TYPE_DESCRIPTOR );
-        fileNamesToTypeDescriptors.put( "neostore.relationshiptypestore.db", RelationshipTypeStore.TYPE_DESCRIPTOR );
-        fileNamesToTypeDescriptors.put( "neostore.relationshiptypestore.db.names", DynamicStringStore.TYPE_DESCRIPTOR );
+        fileNamesToTypeDescriptors.put( NeoStore.DEFAULT_NAME, StoreFileType.Neo.typeDescriptor );
+        fileNamesToTypeDescriptors.put( "neostore.nodestore.db", StoreFileType.Node.typeDescriptor );
+        fileNamesToTypeDescriptors.put( "neostore.propertystore.db", StoreFileType.Property.typeDescriptor );
+        fileNamesToTypeDescriptors.put( "neostore.propertystore.db.arrays", StoreFileType.Array.typeDescriptor );
+        fileNamesToTypeDescriptors.put( "neostore.propertystore.db.index", StoreFileType.PropertyIndex.typeDescriptor );
+        fileNamesToTypeDescriptors.put( "neostore.propertystore.db.index.keys", StoreFileType.PropertyIndexKey.typeDescriptor );
+        fileNamesToTypeDescriptors.put( "neostore.propertystore.db.strings", StoreFileType.String.typeDescriptor );
+        fileNamesToTypeDescriptors.put( "neostore.relationshipstore.db", StoreFileType.Relationship.typeDescriptor );
+        fileNamesToTypeDescriptors.put( "neostore.relationshiptypestore.db", StoreFileType.RelationshipType.typeDescriptor );
+        fileNamesToTypeDescriptors.put( "neostore.relationshiptypestore.db.names", StoreFileType.RelationshipTypeName.typeDescriptor );
     }
 
     public boolean storeFilesAtCurrentVersion( File storeDirectory )

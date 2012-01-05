@@ -41,27 +41,27 @@ import org.neo4j.kernel.impl.nioneo.store.RelationshipTypeStore;
 
 public enum StoreFileType
 {
-    String( "strings", DynamicStringStore.TYPE_DESCRIPTOR,
+    String( "strings", "StringPropertyStore",
             new DynamicRecordLength( new DynamicStringStore.BlockSizeConfiguration(), IdType.STRING_BLOCK ) ),
-    Array( "arrays", DynamicArrayStore.TYPE_DESCRIPTOR,
+    Array( "arrays", "ArrayPropertyStore",
             new DynamicRecordLength( new DynamicArrayStore.BlockSizeConfiguration(), IdType.ARRAY_BLOCK )),
-    RelationshipTypeName( "names", DynamicStringStore.TYPE_DESCRIPTOR,
+    RelationshipTypeName( "names", "StringPropertyStore",
             new DynamicRecordLength( new DynamicStringStore.FixedBlockSize( TYPE_STORE_BLOCK_SIZE ),
                     IdType.RELATIONSHIP_TYPE_BLOCK) ),
-    PropertyIndexKey( "keys", DynamicStringStore.TYPE_DESCRIPTOR,
+    PropertyIndexKey( "keys", "StringPropertyStore",
             new DynamicRecordLength( new DynamicStringStore.FixedBlockSize( KEY_STORE_BLOCK_SIZE ),
                     IdType.PROPERTY_INDEX_BLOCK) ),
-    PropertyIndex( "index", PropertyIndexStore.TYPE_DESCRIPTOR, new FixedRecordLength(),
+    PropertyIndex( "index", "PropertyIndexStore", new FixedRecordLength(),
             PropertyIndexKey ),
-    Property( "propertystore.db", PropertyStore.TYPE_DESCRIPTOR, new FixedRecordLength(),
+    Property( "propertystore.db", "PropertyStore", new FixedRecordLength(),
             String,
             Array,
             PropertyIndex ),
-    Node( "nodestore.db", NodeStore.TYPE_DESCRIPTOR, new FixedRecordLength(), new NodeStore.Initializer() ),
-    Relationship( "relationshipstore.db", RelationshipStore.TYPE_DESCRIPTOR, new FixedRecordLength() ),
-    RelationshipType( "relationshiptypestore.db", RelationshipTypeStore.TYPE_DESCRIPTOR, new FixedRecordLength(),
+    Node( "nodestore.db", "NodeStore", new FixedRecordLength(), new NodeStore.Initializer() ),
+    Relationship( "relationshipstore.db", "NodeStore", new FixedRecordLength() ),
+    RelationshipType( "relationshiptypestore.db", "RelationshipTypeStore", new FixedRecordLength(),
             RelationshipTypeName ),
-    Neo( "neostore", NeoStore.TYPE_DESCRIPTOR, new FixedRecordLength(),
+    Neo( "neostore", "NeoStore", new FixedRecordLength(),
             new NeoStore.Initializer(),
             Property,
             Node,
@@ -69,7 +69,7 @@ public enum StoreFileType
             RelationshipType );
 
     public final String fileNamePart;
-    private String typeDescriptor;
+    public final String typeDescriptor;
     private StoreFileFamily family;
     private StoreInitializer initializer;
     private StoreFileType[] childStoreFiles;

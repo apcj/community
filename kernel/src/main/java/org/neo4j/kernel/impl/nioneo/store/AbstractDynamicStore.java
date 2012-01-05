@@ -31,6 +31,7 @@ import java.util.Map;
 import org.neo4j.helpers.UTF8;
 import org.neo4j.kernel.IdGeneratorFactory;
 import org.neo4j.kernel.IdType;
+import org.neo4j.kernel.impl.nioneo.store.structure.StoreFileType;
 import org.neo4j.kernel.impl.util.StringLogger;
 
 /**
@@ -62,7 +63,7 @@ public abstract class AbstractDynamicStore extends CommonAbstractStore implement
      * bytes.
      * <p>
      * This method will create a empty store with descriptor returned by the
-     * {@link #getTypeDescriptor()}. The internal id generator used by
+     * {@link #getStoreFileType().typeDescriptor}. The internal id generator used by
      * this store will also be created.
      *
      * @param fileName
@@ -130,15 +131,10 @@ public abstract class AbstractDynamicStore extends CommonAbstractStore implement
 
     private int blockSize;
 
-    public AbstractDynamicStore( String fileName, Map<?,?> config, IdType idType )
+    public AbstractDynamicStore( StoreFileType storeFileType, String fileName, Map<?,?> config, IdType idType )
     {
-        super( fileName, config, idType );
+        super( storeFileType, fileName, config, idType );
     }
-
-//    public AbstractDynamicStore( String fileName )
-//    {
-//        super( fileName );
-//    }
 
     @Override
     protected int getEffectiveRecordSize()
@@ -161,7 +157,7 @@ public abstract class AbstractDynamicStore extends CommonAbstractStore implement
     @Override
     protected void verifyFileSizeAndTruncate() throws IOException
     {
-        int expectedVersionLength = UTF8.encode( buildTypeDescriptorAndVersion( getTypeDescriptor() ) ).length;
+        int expectedVersionLength = UTF8.encode( buildTypeDescriptorAndVersion( storeFileType.typeDescriptor ) ).length;
         long fileSize = getFileChannel().size();
         if ( (fileSize - expectedVersionLength) % blockSize != 0 && !isReadOnly() )
         {

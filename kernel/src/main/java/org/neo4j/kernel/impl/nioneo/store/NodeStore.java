@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.neo4j.kernel.IdGeneratorFactory;
 import org.neo4j.kernel.IdType;
 import org.neo4j.kernel.impl.nioneo.store.structure.StoreFileType;
 import org.neo4j.kernel.impl.util.StringLogger;
@@ -33,26 +32,18 @@ import org.neo4j.kernel.impl.util.StringLogger;
  */
 public class NodeStore extends AbstractStore implements Store, RecordStore<NodeRecord>
 {
-    public static final String TYPE_DESCRIPTOR = "NodeStore";
-
     // in_use(byte)+next_rel_id(int)+next_prop_id(int)
     public static final int RECORD_SIZE = 9;
 
     public NodeStore( String fileName, Map<?,?> config )
     {
-        super( fileName, config, IdType.NODE );
+        super( StoreFileType.Node, fileName, config, IdType.NODE );
     }
 
     @Override
     public void accept( RecordStore.Processor processor, NodeRecord record )
     {
         processor.processNode( this, record );
-    }
-
-    @Override
-    public String getTypeDescriptor()
-    {
-        return TYPE_DESCRIPTOR;
     }
 
     @Override

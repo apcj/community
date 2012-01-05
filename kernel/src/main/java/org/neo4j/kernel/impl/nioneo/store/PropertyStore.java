@@ -41,8 +41,6 @@ public class PropertyStore extends AbstractStore implements Store, RecordStore<P
     public static final int DEFAULT_DATA_BLOCK_SIZE = 120;
     public static final int DEFAULT_PAYLOAD_SIZE = 32;
 
-    public static final String TYPE_DESCRIPTOR = "PropertyStore";
-
     public static final int RECORD_SIZE = 1/*next and prev high bits*/
     + 4/*next*/
     + 4/*prev*/
@@ -55,7 +53,7 @@ public class PropertyStore extends AbstractStore implements Store, RecordStore<P
 
     public PropertyStore( String fileName, Map<?,?> config )
     {
-        super( fileName, config, IdType.PROPERTY );
+        super( StoreFileType.Property, fileName, config, IdType.PROPERTY );
     }
 
     @Override
@@ -77,7 +75,7 @@ public class PropertyStore extends AbstractStore implements Store, RecordStore<P
     @Override
     protected void initStorage()
     {
-        stringPropertyStore = new DynamicStringStore( childStorageFileName( StoreFileType.String.fileNamePart ),
+        stringPropertyStore = new DynamicStringStore( StoreFileType.String, childStorageFileName( StoreFileType.String.fileNamePart ),
             getConfig(), IdType.STRING_BLOCK );
         propertyIndexStore = new PropertyIndexStore( childStorageFileName( StoreFileType.PropertyIndex.fileNamePart ),
             getConfig() );
@@ -130,12 +128,6 @@ public class PropertyStore extends AbstractStore implements Store, RecordStore<P
         propertyIndexStore.flushAll();
         arrayPropertyStore.flushAll();
         super.flushAll();
-    }
-
-    @Override
-    public String getTypeDescriptor()
-    {
-        return TYPE_DESCRIPTOR;
     }
 
     @Override
