@@ -311,7 +311,7 @@ public abstract class InternalAbstractGraphDatabase
                     throw new IllegalStateException( "Unknown transaction manager implementation: "
                             + serviceName );
                 }
-                txManager = provider.loadTransactionManager( this.storeDir, kernelPanicEventGenerator, txHook, logging.getLogger( Loggers.TXMANAGER ), fileSystem);
+                txManager = provider.loadTransactionManager( this.storeDir, xaDataSourceManager, kernelPanicEventGenerator, txHook, logging.getLogger( Loggers.TXMANAGER ), fileSystem);
             }
         }
         life.add( txManager );
@@ -719,6 +719,7 @@ public abstract class InternalAbstractGraphDatabase
         return storeDir;
     }
 
+    @Override
     public StoreId getStoreId()
     {
         return storeId;
@@ -1014,6 +1015,12 @@ public abstract class InternalAbstractGraphDatabase
 	public final StringLogger getMessageLog()
     {
         return msgLog;
+    }
+
+    @Override
+    public TxIdGenerator getTxIdGenerator()
+    {
+        return txIdGenerator;
     }
 
     @Override

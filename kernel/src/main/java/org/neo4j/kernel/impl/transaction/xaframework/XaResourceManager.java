@@ -504,11 +504,6 @@ public class XaResourceManager
             txIdGenerator.committed( dataSource, xaTransaction.getIdentifier(), xaTransaction.getCommitTxId(), null );
         return xaTransaction;
     }
-    
-    void pushTransaction( int identifier, long txId, int authorServerId )
-    {
-        txIdGenerator.committed( dataSource, identifier, txId, authorServerId );
-    }
 
     private ForceMode getForceMode()
     {
