@@ -38,7 +38,7 @@ import org.apache.commons.configuration.MapConfiguration;
 import org.junit.Test;
 import org.neo4j.jmx.JmxUtils;
 import org.neo4j.jmx.Kernel;
-import org.neo4j.kernel.InternalAbstractGraphDatabase;
+import org.neo4j.kernel.AbstractGraphDatabase;
 import org.neo4j.kernel.impl.util.StringLogger;
 import org.neo4j.server.CommunityNeoServer;
 import org.neo4j.server.database.Database;
@@ -57,11 +57,12 @@ public class WebAdminModuleTest
         when( neoServer.getWebServer() ).thenReturn( webServer );
 
         Database db = mock( Database.class );
-        db.graph = ( mock( InternalAbstractGraphDatabase.class ) );
+        AbstractGraphDatabase graph = mock( AbstractGraphDatabase.class );
+        when( db.getGraph() ).thenReturn( graph );
         Kernel mockKernel = mock( Kernel.class );
         ObjectName mockObjectName = mock( ObjectName.class );
         when( mockKernel.getMBeanQuery() ).thenReturn( mockObjectName );
-        when( db.graph.getManagementBeans( Kernel.class ) ).thenReturn( Collections.singleton( mockKernel ) );
+        when( graph.getManagementBeans( Kernel.class ) ).thenReturn( Collections.singleton( mockKernel ) );
 
         when( neoServer.getDatabase() ).thenReturn( db );
         when( neoServer.getConfiguration() ).thenReturn( new MapConfiguration( new HashMap<Object, Object>() ) );
