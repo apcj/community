@@ -28,7 +28,7 @@ import org.apache.commons.configuration.Configuration;
 import org.neo4j.graphdb.factory.GraphDatabaseSetting;
 import org.neo4j.graphdb.factory.GraphDatabaseSettings;
 import org.neo4j.helpers.collection.MapUtil;
-import org.neo4j.kernel.GraphDatabaseAPI;
+import org.neo4j.kernel.AbstractGraphDatabase;
 import org.neo4j.server.configuration.Configurator;
 import org.neo4j.shell.ShellSettings;
 
@@ -52,8 +52,8 @@ public class CommunityDatabase extends/* implements */ Database {
 	{
 		try
         {
-			this.graph = (GraphDatabaseAPI) new org.neo4j.graphdb.factory.GraphDatabaseFactory()
-				.newEmbeddedDatabaseBuilder( serverConfig.getString(Configurator.DATABASE_LOCATION_PROPERTY_KEY, Configurator.DEFAULT_DATABASE_LOCATION_PROPERTY_KEY) )
+			this.graph = (AbstractGraphDatabase) new org.neo4j.graphdb.factory.GraphDatabaseFactory()
+				.newEmbeddedDatabaseBuilder( serverConfig.getString( Configurator.DATABASE_LOCATION_PROPERTY_KEY, Configurator.DEFAULT_DATABASE_LOCATION_PROPERTY_KEY) )
 				.setConfig( loadNeo4jProperties() )
 				.newGraphDatabase();
             log.info( "Successfully started database" );
@@ -70,7 +70,7 @@ public class CommunityDatabase extends/* implements */ Database {
 	{
 		try
         {
-			if(this.graph != null) 
+			if(this.graph != null)
 			{
 				this.graph.shutdown();
 				this.graph = null;

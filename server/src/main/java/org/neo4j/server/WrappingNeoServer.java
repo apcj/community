@@ -19,7 +19,7 @@
  */
 package org.neo4j.server;
 
-import org.neo4j.kernel.GraphDatabaseAPI;
+import org.neo4j.kernel.AbstractGraphDatabase;
 import org.neo4j.server.configuration.Configurator;
 import org.neo4j.server.configuration.ServerConfigurator;
 import org.neo4j.server.database.Database;
@@ -28,14 +28,14 @@ import org.neo4j.server.startup.healthcheck.StartupHealthCheck;
 
 public class WrappingNeoServer extends CommunityNeoServer {
 
-	private final GraphDatabaseAPI db;
+	private final AbstractGraphDatabase db;
 
-	public WrappingNeoServer(GraphDatabaseAPI db) 
+	public WrappingNeoServer(AbstractGraphDatabase db)
 	{
 		this(db, new ServerConfigurator(db));
 	}
 	
-	public WrappingNeoServer(GraphDatabaseAPI db, Configurator configurator) 
+	public WrappingNeoServer(AbstractGraphDatabase db, Configurator configurator)
 	{
 		this.configurator = configurator;
 		this.db = db;

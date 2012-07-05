@@ -27,6 +27,8 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
+import com.sun.jersey.api.client.ClientHandlerException;
+import com.sun.jersey.api.client.ClientResponse.Status;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -35,7 +37,6 @@ import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import org.neo4j.graphdb.factory.GraphDatabaseSetting;
 import org.neo4j.jmx.Primitives;
 import org.neo4j.kernel.AbstractGraphDatabase;
-import org.neo4j.kernel.GraphDatabaseAPI;
 import org.neo4j.server.configuration.Configurator;
 import org.neo4j.server.configuration.ServerConfigurator;
 import org.neo4j.server.helpers.FunctionalTestHelper;
@@ -46,9 +47,6 @@ import org.neo4j.shell.ShellSettings;
 import org.neo4j.test.ImpermanentGraphDatabase;
 import org.neo4j.test.TestData;
 import org.neo4j.test.server.ExclusiveServerTestBase;
-
-import com.sun.jersey.api.client.ClientHandlerException;
-import com.sun.jersey.api.client.ClientResponse.Status;
 
 public class WrappingNeoServerBootstrapperTest extends ExclusiveServerTestBase
 {
@@ -94,7 +92,7 @@ public class WrappingNeoServerBootstrapperTest extends ExclusiveServerTestBase
 
         // START SNIPPET: customConfiguredWrappingNeoServerBootstrapper
         // let the database accept remote neo4j-shell connections
-        GraphDatabaseAPI graphdb = (GraphDatabaseAPI) new GraphDatabaseFactory().newEmbeddedDatabaseBuilder( "target/configDb" ).setConfig( ShellSettings.remote_shell_enabled, GraphDatabaseSetting.TRUE ).newGraphDatabase();
+        AbstractGraphDatabase graphdb = (AbstractGraphDatabase) new GraphDatabaseFactory().newEmbeddedDatabaseBuilder( "target/configDb" ).setConfig( ShellSettings.remote_shell_enabled, GraphDatabaseSetting.TRUE ).newGraphDatabase();
         ServerConfigurator config;
         config = new ServerConfigurator( graphdb );
         // let the server endpoint be on a custom port

@@ -43,7 +43,7 @@ public class DatabaseTuningFunctionalTest extends ExclusiveServerTestBase
                 .withDefaultDatabaseTuning()
                 .build();
         server.start();
-        Map<Object, Object> params = null; // TODO This relies on internal stuff, which is no good: server.getDatabase().graph.getConfig().getParams();
+        Map<Object, Object> params = null; // TODO This relies on internal stuff, which is no good: server.getDatabase().getGraph().getConfig().getParams();
 
 
         assertTrue( propertyAndValuePresentIn( "neostore.nodestore.db.mapped_memory", "25M", params ) );

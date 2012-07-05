@@ -19,8 +19,8 @@
  */
 package org.neo4j.server;
 
+import org.neo4j.kernel.AbstractGraphDatabase;
 import org.neo4j.kernel.EmbeddedGraphDatabase;
-import org.neo4j.kernel.GraphDatabaseAPI;
 import org.neo4j.server.configuration.Configurator;
 import org.neo4j.server.configuration.ServerConfigurator;
 
@@ -54,7 +54,7 @@ import org.neo4j.server.configuration.ServerConfigurator;
  */
 public class WrappingNeoServerBootstrapper extends Bootstrapper
 {
-    private final GraphDatabaseAPI db;
+    private final AbstractGraphDatabase db;
     private final Configurator configurator;
 
     /**
@@ -62,7 +62,7 @@ public class WrappingNeoServerBootstrapper extends Bootstrapper
      * 
      * @param db
      */
-    public WrappingNeoServerBootstrapper( GraphDatabaseAPI db )
+    public WrappingNeoServerBootstrapper( AbstractGraphDatabase db )
     {
         this( db, new ServerConfigurator( db ) );
     }
@@ -75,7 +75,7 @@ public class WrappingNeoServerBootstrapper extends Bootstrapper
      * @param db
      * @param configurator
      */
-    public WrappingNeoServerBootstrapper( GraphDatabaseAPI db, Configurator configurator )
+    public WrappingNeoServerBootstrapper( AbstractGraphDatabase db, Configurator configurator )
     {
         this.db = db;
         this.configurator = configurator;
