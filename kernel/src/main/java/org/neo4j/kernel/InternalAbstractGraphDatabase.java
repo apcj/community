@@ -755,7 +755,7 @@ public abstract class InternalAbstractGraphDatabase
         return result;
     }
 
-    // TODO: Move this method to new AGD
+    @Override
     public boolean transactionRunning()
     {
         try
@@ -769,15 +769,7 @@ public abstract class InternalAbstractGraphDatabase
         }
     }
 
-    /**
-     * Get a single management bean. Delegates to {@link #getSingleManagementBean(Class)}.
-     *
-     * @deprecated since Neo4j may now have multiple beans implementing the same bean interface, this method has been
-     *             deprecated in favor of {@link #getSingleManagementBean(Class)} and {@link #getManagementBeans(Class)}
-     *             . Version 1.5 of Neo4j will be the last version to contain this method.
-     */
-    @Deprecated
-    // TODO: Move this method to new AGD / OR DELETE
+    @Override
     public final <T> T getManagementBean( Class<T> type )
     {
         return getSingleManagementBean( type );
