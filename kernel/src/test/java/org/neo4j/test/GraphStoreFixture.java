@@ -58,17 +58,37 @@ public abstract class GraphStoreFixture implements TestRule
     {
         public long node()
         {
-            return ++nodeId;
+            return nodeId++;
         }
 
         public long relationship()
         {
-            return ++relId;
+            return relId++;
         }
 
         public long property()
         {
-            return ++propId;
+            return propId++;
+        }
+
+        public long stringProperty()
+        {
+            return stringPropId++;
+        }
+
+        public long arrayProperty()
+        {
+            return arrayPropId++;
+        }
+
+        public int relationshipType()
+        {
+            return relTypeId++;
+        }
+
+        public int propertyKey()
+        {
+            return propKeyId++;
         }
     }
 
@@ -265,6 +285,10 @@ public abstract class GraphStoreFixture implements TestRule
     private long nodeId;
     private long relId;
     private long propId;
+    private long stringPropId;
+    private long arrayPropId;
+    private int relTypeId;
+    private int propKeyId;
 
     private void generateInitialData()
     {
@@ -276,6 +300,10 @@ public abstract class GraphStoreFixture implements TestRule
             nodeId = stores.getNodeStore().getHighId();
             relId = stores.getRelationshipStore().getHighId();
             propId = stores.getPropertyStore().getHighId();
+            stringPropId = stores.getStringStore().getHighId();
+            arrayPropId = stores.getArrayStore().getHighId();
+            relTypeId = (int)stores.getRelationshipTypeStore().getHighId();
+            propKeyId = (int)stores.getPropertyKeyStore().getHighId();
         }
         finally
         {
