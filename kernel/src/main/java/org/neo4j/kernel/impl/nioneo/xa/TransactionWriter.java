@@ -177,7 +177,7 @@ public class TransactionWriter
         else if ( data.length <= (dynamicIds.length - 1) * NAME_STORE_BLOCK_SIZE )
         {
             throw new IllegalArgumentException(
-                    String.format( "%[s] is to short to fill %d blocks", name, dynamicIds.length ) );
+                    String.format( "[%s] is to short to fill %d blocks", name, dynamicIds.length ) );
         }
 
         for ( int i = 0; i < dynamicIds.length; i++ )
@@ -188,6 +188,7 @@ public class TransactionWriter
             DynamicRecord dynamicRecord = new DynamicRecord( dynamicIds[i] );
             dynamicRecord.setInUse( true );
             dynamicRecord.setData( part );
+            dynamicRecord.setCreated();
             record.addNameRecord( dynamicRecord );
         }
         record.setNameId( dynamicIds[0] );

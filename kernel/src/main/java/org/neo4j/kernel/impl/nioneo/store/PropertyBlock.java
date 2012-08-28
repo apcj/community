@@ -172,7 +172,7 @@ public class PropertyBlock
         {
         case STRING:
         case ARRAY:
-            result.append( ",firstDynamic=" ).append( getSingleValueBlock() );
+            result.append( ",firstDynamic=" ).append( getSingleValueLong() );
             break;
         default:
             Object value = type.getValue( this, null );
