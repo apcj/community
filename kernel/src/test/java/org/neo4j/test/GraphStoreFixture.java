@@ -2,6 +2,8 @@ package org.neo4j.test;
 
 import java.io.IOException;
 import java.nio.channels.ReadableByteChannel;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
@@ -268,7 +270,7 @@ public abstract class GraphStoreFixture implements TestRule
 
     protected void applyTransaction( ReadableByteChannel transaction ) throws IOException
     {
-        EmbeddedGraphDatabase database = new EmbeddedGraphDatabase( directory );
+        EmbeddedGraphDatabase database = new EmbeddedGraphDatabase( directory, configuration( false ) );
         try
         {
             database.beginTx();
@@ -278,6 +280,11 @@ public abstract class GraphStoreFixture implements TestRule
         {
             database.shutdown();
         }
+    }
+
+    protected Map<String, String> configuration( boolean initialData )
+    {
+        return new HashMap<String, String>();
     }
 
     private String directory;
@@ -292,7 +299,7 @@ public abstract class GraphStoreFixture implements TestRule
 
     private void generateInitialData()
     {
-        EmbeddedGraphDatabase graphDb = new EmbeddedGraphDatabase( directory );
+        EmbeddedGraphDatabase graphDb = new EmbeddedGraphDatabase( directory, configuration( true ) );
         try
         {
             generateInitialData( graphDb );
@@ -302,8 +309,8 @@ public abstract class GraphStoreFixture implements TestRule
             propId = stores.getPropertyStore().getHighId();
             stringPropId = stores.getStringStore().getHighId();
             arrayPropId = stores.getArrayStore().getHighId();
-            relTypeId = (int)stores.getRelationshipTypeStore().getHighId();
-            propKeyId = (int)stores.getPropertyKeyStore().getHighId();
+            relTypeId = (int) stores.getRelationshipTypeStore().getHighId();
+            propKeyId = (int) stores.getPropertyKeyStore().getHighId();
         }
         finally
         {
