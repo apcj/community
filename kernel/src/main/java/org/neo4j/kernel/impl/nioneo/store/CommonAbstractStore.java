@@ -20,8 +20,6 @@
 
 package org.neo4j.kernel.impl.nioneo.store;
 
-import static org.neo4j.helpers.Exceptions.launderedException;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
@@ -33,12 +31,14 @@ import java.util.logging.Logger;
 import org.neo4j.graphdb.factory.GraphDatabaseSetting;
 import org.neo4j.graphdb.factory.GraphDatabaseSettings;
 import org.neo4j.helpers.UTF8;
-import org.neo4j.kernel.InternalAbstractGraphDatabase;
 import org.neo4j.kernel.IdGeneratorFactory;
 import org.neo4j.kernel.IdType;
+import org.neo4j.kernel.InternalAbstractGraphDatabase;
 import org.neo4j.kernel.configuration.Config;
 import org.neo4j.kernel.impl.core.ReadOnlyDbException;
 import org.neo4j.kernel.impl.util.StringLogger;
+
+import static org.neo4j.helpers.Exceptions.launderedException;
 
 /**
  * Contains common implementation for {@link AbstractStore} and
@@ -68,7 +68,7 @@ public abstract class CommonAbstractStore
     protected FileSystemAbstraction fileSystemAbstraction;
 
     protected final String storageFileName;
-    private final IdType idType;
+    protected final IdType idType;
     protected StringLogger stringLogger;
     private IdGenerator idGenerator = null;
     private FileChannel fileChannel = null;

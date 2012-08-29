@@ -23,9 +23,9 @@ import java.util.Iterator;
 
 import org.neo4j.helpers.Predicate;
 import org.neo4j.helpers.Progress;
-import org.neo4j.helpers.ProgressIndicator;
 import org.neo4j.helpers.collection.IterableWrapper;
 import org.neo4j.helpers.collection.PrefetchingIterator;
+import org.neo4j.kernel.IdType;
 
 public interface RecordStore<R extends AbstractBaseRecord>
 {
@@ -77,7 +77,7 @@ public interface RecordStore<R extends AbstractBaseRecord>
             processRecord( PropertyRecord.class, store, property );
         }
 
-        public void processString( RecordStore<DynamicRecord> store, DynamicRecord string )
+        public void processString( RecordStore<DynamicRecord> store, DynamicRecord string, IdType idType )
         {
             processDynamic( store, string );
         }

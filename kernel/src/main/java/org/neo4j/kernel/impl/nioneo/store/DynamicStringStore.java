@@ -48,7 +48,7 @@ public class DynamicStringStore extends AbstractDynamicStore
     @Override
     public void accept( RecordStore.Processor processor, DynamicRecord record )
     {
-        processor.processString( this, record );
+        processor.processString( this, record, idType );
     }
 
     @Override
