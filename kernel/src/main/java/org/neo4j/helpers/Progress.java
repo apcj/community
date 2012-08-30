@@ -28,7 +28,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -448,7 +447,7 @@ public abstract class Progress
         private void update( long progress )
         {
             start();
-            int current = (int) ((progress * indicator.reportResolution()) / totalCount);
+            int current = totalCount == 0 ? 0 : (int) ((progress * indicator.reportResolution()) / totalCount);
             if ( current > lastReported )
             {
                 indicator.progress( lastReported, current );
