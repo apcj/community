@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.neo4j.helpers;
+package org.neo4j.helpers.progress;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -37,6 +37,7 @@ import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 import org.mockito.InOrder;
 import org.mockito.Mockito;
+import org.neo4j.helpers.ProcessFailureException;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.junit.Assert.assertEquals;
@@ -50,26 +51,25 @@ import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
-public class ProgressTest
+public class ProgressMonitorTest
 {
     @Test
     public void shouldReportProgressInTheSpecifiedIntervals() throws Exception
     {
         // given
-        Progress.Indicator indicator = indicatorMock();
-        Progress progress = factory.mock( indicator, 10 ).singlePart( testName.getMethodName(), 16 );
+        Indicator indicator = indicatorMock();
+        ProgressListener progressListener = factory.mock( indicator, 10 ).singlePart( testName.getMethodName(), 16 );
 
         // when
-        progress.start();
+        progressListener.started();
         for ( int i = 0; i < 16; i++ )
         {
-            progress.add( 1 );
+            progressListener.add( 1 );
         }
-        progress.done();
+        progressListener.done();
 
         // then
         InOrder order = inOrder( indicator );
@@ -86,17 +86,17 @@ public class ProgressTest
     public void shouldAggregateProgressFromMultipleProcesses() throws Exception
     {
         // given
-        Progress.Indicator indicator = indicatorMock();
-        Progress.MultiPartBuilder builder = factory.mock( indicator, 10 ).multipleParts( testName.getMethodName() );
-        Progress first = builder.progressForPart( "first", 5 );
-        Progress other = builder.progressForPart( "other", 5 );
+        Indicator indicator = indicatorMock();
+        ProgressMonitorFactory.MultiPartBuilder builder = factory.mock( indicator, 10 ).multipleParts( testName.getMethodName() );
+        ProgressListener first = builder.progressForPart( "first", 5 );
+        ProgressListener other = builder.progressForPart( "other", 5 );
         builder.build();
         InOrder order = inOrder( indicator );
         order.verify( indicator ).startProcess( 10 );
         order.verifyNoMoreInteractions();
 
         // when
-        first.start();
+        first.started();
         for ( int i = 0; i < 5; i++ )
         {
             first.add( 1 );
@@ -113,7 +113,7 @@ public class ProgressTest
         order.verifyNoMoreInteractions();
 
         // when
-        other.start();
+        other.started();
         for ( int i = 0; i < 5; i++ )
         {
             other.add( 1 );
@@ -135,7 +135,7 @@ public class ProgressTest
     public void shouldNotAllowAddingPartsAfterCompletingMultiPartBuilder() throws Exception
     {
         // given
-        Progress.MultiPartBuilder builder = factory.mock( indicatorMock(), 10 )
+        ProgressMonitorFactory.MultiPartBuilder builder = factory.mock( indicatorMock(), 10 )
                                                    .multipleParts( testName.getMethodName() );
         builder.progressForPart( "first", 10 );
         builder.build();
@@ -157,7 +157,7 @@ public class ProgressTest
     public void shouldNotAllowAddingMultiplePartsWithSameIdentifier() throws Exception
     {
         // given
-        Progress.MultiPartBuilder builder = Mockito.mock( Progress.Factory.class )
+        ProgressMonitorFactory.MultiPartBuilder builder = Mockito.mock( ProgressMonitorFactory.class )
                                                    .multipleParts( testName.getMethodName() );
         builder.progressForPart( "first", 10 );
 
@@ -178,15 +178,15 @@ public class ProgressTest
     public void shouldStartProcessAutomaticallyIfNotDoneBefore() throws Exception
     {
         // given
-        Progress.Indicator indicator = indicatorMock();
-        Progress progress = factory.mock( indicator, 10 ).singlePart( testName.getMethodName(), 16 );
+        Indicator indicator = indicatorMock();
+        ProgressListener progressListener = factory.mock( indicator, 10 ).singlePart( testName.getMethodName(), 16 );
 
         // when
         for ( int i = 0; i < 16; i++ )
         {
-            progress.add( 1 );
+            progressListener.add( 1 );
         }
-        progress.done();
+        progressListener.done();
 
         // then
         InOrder order = inOrder( indicator );
@@ -203,10 +203,10 @@ public class ProgressTest
     public void shouldStartMultiPartProcessAutomaticallyIfNotDoneBefore() throws Exception
     {
         // given
-        Progress.Indicator indicator = indicatorMock();
-        Progress.MultiPartBuilder builder = factory.mock( indicator, 10 ).multipleParts( testName.getMethodName() );
-        Progress first = builder.progressForPart( "first", 5 );
-        Progress other = builder.progressForPart( "other", 5 );
+        Indicator indicator = indicatorMock();
+        ProgressMonitorFactory.MultiPartBuilder builder = factory.mock( indicator, 10 ).multipleParts( testName.getMethodName() );
+        ProgressListener first = builder.progressForPart( "first", 5 );
+        ProgressListener other = builder.progressForPart( "other", 5 );
         builder.build();
         InOrder order = inOrder( indicator );
         order.verify( indicator ).startProcess( 10 );
@@ -250,8 +250,8 @@ public class ProgressTest
     public void shouldCompleteMultiPartProgressWithNoPartsImmediately() throws Exception
     {
         // given
-        Progress.Indicator indicator = indicatorMock();
-        Progress.MultiPartBuilder builder = factory.mock( indicator, 10 ).multipleParts( testName.getMethodName() );
+        Indicator indicator = indicatorMock();
+        ProgressMonitorFactory.MultiPartBuilder builder = factory.mock( indicator, 10 ).multipleParts( testName.getMethodName() );
 
         // when
         builder.build();
@@ -264,9 +264,9 @@ public class ProgressTest
         order.verifyNoMoreInteractions();
     }
 
-    private static Progress.Indicator indicatorMock()
+    private static Indicator indicatorMock()
     {
-        Progress.Indicator indicator = mock( Progress.Indicator.class, Mockito.CALLS_REAL_METHODS );
+        Indicator indicator = mock( Indicator.class, Mockito.CALLS_REAL_METHODS );
         doNothing().when( indicator ).progress( anyInt(), anyInt() );
         return indicator;
     }
@@ -292,12 +292,12 @@ public class ProgressTest
     {
         // given
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        Progress progress = Progress.textual( stream ).singlePart( testName.getMethodName(), 1000 );
+        ProgressListener progressListener = ProgressMonitorFactory.textual( stream ).singlePart( testName.getMethodName(), 1000 );
 
         // when
         for ( int i = 0; i < 1000; i++ )
         {
-            progress.add( 1 );
+            progressListener.add( 1 );
         }
 
         // then
@@ -311,12 +311,12 @@ public class ProgressTest
     {
         // given
         StringWriter writer = new StringWriter();
-        Progress progress = Progress.textual( writer ).singlePart( testName.getMethodName(), 50 );
+        ProgressListener progressListener = ProgressMonitorFactory.textual( writer ).singlePart( testName.getMethodName(), 50 );
 
         // when
         for ( int i = 0; i < 50; i++ )
         {
-            progress.add( 1 );
+            progressListener.add( 1 );
         }
 
         // then
@@ -328,8 +328,8 @@ public class ProgressTest
     public void shouldPassThroughAllInvocationsOnDecorator() throws Exception
     {
         // given
-        Progress.Indicator decorated = mock( Progress.Indicator.class );
-        Progress.Indicator decorator = new Progress.Indicator.Decorator( decorated )
+        Indicator decorated = mock( Indicator.class );
+        Indicator decorator = new Indicator.Decorator( decorated )
         {
         };
 
@@ -388,10 +388,10 @@ public class ProgressTest
     public void shouldBeAbleToAwaitCompletionOfMultiPartProgress() throws Exception
     {
         // given
-        Progress.MultiPartBuilder builder = Progress.Factory.NONE.multipleParts( testName.getMethodName() );
-        Progress part1 = builder.progressForPart( "part1", 1 );
-        Progress part2 = builder.progressForPart( "part2", 1 );
-        final Progress.Completion completion = builder.build();
+        ProgressMonitorFactory.MultiPartBuilder builder = ProgressMonitorFactory.NONE.multipleParts( testName.getMethodName() );
+        ProgressListener part1 = builder.progressForPart( "part1", 1 );
+        ProgressListener part2 = builder.progressForPart( "part2", 1 );
+        final Completion completion = builder.build();
 
         // when
         final CountDownLatch begin = new CountDownLatch( 1 ), end = new CountDownLatch( 1 );
@@ -450,10 +450,38 @@ public class ProgressTest
     }
 
     @Test
+    public void shouldReturnToCompletionWaiterWhenFirstJobFails() throws Exception
+    {
+        // given
+        ProgressMonitorFactory.MultiPartBuilder builder = ProgressMonitorFactory.NONE.multipleParts( testName.getMethodName() );
+        ProgressListener part1 = builder.progressForPart( "part1", 1 );
+        ProgressListener part2 = builder.progressForPart( "part2", 1 );
+        final Completion completion = builder.build();
+
+        // when
+        part1.started();
+        part2.started();
+        part2.failed( new RuntimeException( "failure in one of the jobs" ) );
+
+        // neither job completes
+
+        try
+        {
+            completion.await( 1, TimeUnit.MILLISECONDS );
+            fail( "should have thrown exception" );
+        }
+        // then
+        catch ( ProcessFailureException expected )
+        {
+            assertEquals( "failure in one of the jobs", expected.getCause().getMessage() );
+        }
+    }
+
+    @Test
     public void shouldNotAllowNullCompletionCallbacks() throws Exception
     {
-        Progress.MultiPartBuilder builder = Progress.Factory.NONE.multipleParts( testName.getMethodName() );
-        Progress.Completion completion = builder.build();
+        ProgressMonitorFactory.MultiPartBuilder builder = ProgressMonitorFactory.NONE.multipleParts( testName.getMethodName() );
+        Completion completion = builder.build();
 
         // when
         try
@@ -472,9 +500,9 @@ public class ProgressTest
     public void shouldInvokeAllCallbacksEvenWhenOneThrowsException() throws Exception
     {
         // given
-        Progress.MultiPartBuilder builder = Progress.Factory.NONE.multipleParts( testName.getMethodName() );
-        Progress progress = builder.progressForPart( "only part", 1 );
-        Progress.Completion completion = builder.build();
+        ProgressMonitorFactory.MultiPartBuilder builder = ProgressMonitorFactory.NONE.multipleParts( testName.getMethodName() );
+        ProgressListener progressListener = builder.progressForPart( "only part", 1 );
+        Completion completion = builder.build();
         Runnable callback = mock( Runnable.class );
         doThrow( RuntimeException.class ).doNothing().when( callback ).run();
         completion.notify( callback );
@@ -487,7 +515,7 @@ public class ProgressTest
             System.setErr( new PrintStream( out ) );
 
             // when
-            progress.done();
+            progressListener.done();
         }
         finally
         {
@@ -506,10 +534,10 @@ public class ProgressTest
     public void shouldAllowStartingAPartBeforeCompletionOfMultiPartBuilder() throws Exception
     {
         // given
-        Progress.Indicator indicator = mock( Progress.Indicator.class );
-        Progress.MultiPartBuilder builder = factory.mock( indicator, 10 ).multipleParts( testName.getMethodName() );
-        Progress part1 = builder.progressForPart( "part1", 1 );
-        Progress part2 = builder.progressForPart( "part2", 1 );
+        Indicator indicator = mock( Indicator.class );
+        ProgressMonitorFactory.MultiPartBuilder builder = factory.mock( indicator, 10 ).multipleParts( testName.getMethodName() );
+        ProgressListener part1 = builder.progressForPart( "part1", 1 );
+        ProgressListener part2 = builder.progressForPart( "part2", 1 );
 
         // when
         part1.add( 1 );
@@ -535,16 +563,16 @@ public class ProgressTest
 
     private static class SingleIndicator implements TestRule
     {
-        Progress.Factory mock( Progress.Indicator indicatorMock, int indicatorSteps )
+        ProgressMonitorFactory mock( Indicator indicatorMock, int indicatorSteps )
         {
             when( indicatorMock.reportResolution() ).thenReturn( indicatorSteps );
-            Progress.Factory factory = Mockito.mock( Progress.Factory.class );
+            ProgressMonitorFactory factory = Mockito.mock( ProgressMonitorFactory.class );
             when( factory.newIndicator( any( String.class ) ) ).thenReturn( indicatorMock );
             factoryMocks.add( factory );
             return factory;
         }
 
-        private final Collection<Progress.Factory> factoryMocks = new ArrayList<Progress.Factory>();
+        private final Collection<ProgressMonitorFactory> factoryMocks = new ArrayList<ProgressMonitorFactory>();
 
         @Override
         public Statement apply( final Statement base, Description description )
@@ -555,7 +583,7 @@ public class ProgressTest
                 public void evaluate() throws Throwable
                 {
                     base.evaluate();
-                    for ( Progress.Factory factoryMock : factoryMocks )
+                    for ( ProgressMonitorFactory factoryMock : factoryMocks )
                     {
                         verify( factoryMock, times( 1 ) ).newIndicator( any( String.class ) );
                     }
