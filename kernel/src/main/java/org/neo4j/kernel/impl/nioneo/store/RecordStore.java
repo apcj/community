@@ -22,7 +22,7 @@ package org.neo4j.kernel.impl.nioneo.store;
 import java.util.Iterator;
 
 import org.neo4j.helpers.Predicate;
-import org.neo4j.helpers.Progress;
+import org.neo4j.helpers.progress.ProgressListener;
 import org.neo4j.helpers.collection.IterableWrapper;
 import org.neo4j.helpers.collection.PrefetchingIterator;
 import org.neo4j.kernel.IdType;
@@ -166,24 +166,24 @@ public interface RecordStore<R extends AbstractBaseRecord>
 
         public <R extends AbstractBaseRecord> void applyFiltered( RecordStore<R> store, Predicate<? super R>... filters )
         {
-            apply( store, Progress.NONE, filters );
+            apply( store, ProgressListener.NONE, filters );
         }
 
-        public <R extends AbstractBaseRecord> void applyFiltered( RecordStore<R> store, Progress progress,
+        public <R extends AbstractBaseRecord> void applyFiltered( RecordStore<R> store, ProgressListener progressListener,
                 Predicate<? super R>... filters )
         {
-            apply( store, progress, filters );
+            apply( store, progressListener, filters );
         }
 
-        private final <R extends AbstractBaseRecord> void apply( RecordStore<R> store, Progress progress,
+        private final <R extends AbstractBaseRecord> void apply( RecordStore<R> store, ProgressListener progressListener,
                 Predicate<? super R>... filters )
         {
             for ( R record : scan( store, filters ) )
             {
                 store.accept( this, record );
-                progress.set( record.getLongId() );
+                progressListener.set( record.getLongId() );
             }
-            progress.done();
+            progressListener.done();
         }
     }
 }
