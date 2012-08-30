@@ -71,6 +71,12 @@ public abstract class Progress
         {
             // do nothing
         }
+
+        @Override
+        public void signalFailure(Throwable e)
+        {
+            // do nothing
+        }
     };
 
     public static Factory textual( final OutputStream out )
@@ -106,6 +112,8 @@ public abstract class Progress
 
     public abstract void done();
 
+    public abstract void signalFailure( Throwable e ) throws ProcessFailureException;
+
     public static abstract class Factory
     {
         public static final Factory NONE = new Factory()
@@ -132,16 +140,13 @@ public abstract class Progress
 
     public static final class MultiPartBuilder
     {
-        private Aggregator aggregator = new Aggregator();
+        private Aggregator aggregator;
         private Set<String> parts = new HashSet<String>();
         private Completion completion = null;
-        private final Factory factory;
-        private final String process;
 
         private MultiPartBuilder( Factory factory, String process )
         {
-            this.factory = factory;
-            this.process = process;
+            this.aggregator = new Aggregator(factory.newIndicator( process ));
         }
 
         public Progress progressForPart( String part, long totalCount )
@@ -159,11 +164,11 @@ public abstract class Progress
             return progress;
         }
 
-        public Completion complete()
+        public Completion build()
         {
             if ( aggregator != null )
             {
-                completion = aggregator.initialize( factory.newIndicator( process ) );
+                completion = aggregator.initialize();
             }
             aggregator = null;
             parts = null;
@@ -303,6 +308,7 @@ public abstract class Progress
     public static final class Completion
     {
         private volatile Collection<Runnable> callbacks = new ArrayList<Runnable>();
+        private Throwable processFailureCause;
 
         void complete()
         {
@@ -329,7 +335,13 @@ public abstract class Progress
             }
         }
 
-        public void notify( Runnable callback )
+        void signalFailure( Throwable e )
+        {
+            this.processFailureCause = e;
+            complete();
+        }
+
+        void notify( Runnable callback )
         {
             if ( callback == null )
             {
@@ -353,7 +365,8 @@ public abstract class Progress
             }
         }
 
-        public void await( long timeout, TimeUnit unit ) throws InterruptedException, TimeoutException
+        public void await( long timeout, TimeUnit unit )
+                throws InterruptedException, TimeoutException, ProcessFailureException
         {
             CountDownLatch latch = null;
             Collection<Runnable> callbacks = this.callbacks;
@@ -374,6 +387,10 @@ public abstract class Progress
                     throw new TimeoutException(
                             String.format( "Process did not complete within %d %s.", timeout, unit.name() ) );
                 }
+            }
+            if (processFailureCause != null)
+            {
+                throw new ProcessFailureException( processFailureCause );
             }
         }
 
@@ -444,6 +461,12 @@ public abstract class Progress
             indicator.completeProcess();
         }
 
+        @Override
+        public void signalFailure( Throwable e ) throws ProcessFailureException
+        {
+            throw new ProcessFailureException( e );
+        }
+
         private void update( long progress )
         {
             start();
@@ -500,6 +523,12 @@ public abstract class Progress
             aggregator.complete( this );
         }
 
+        @Override
+        public void signalFailure( Throwable e ) throws ProcessFailureException
+        {
+            aggregator.signalFailure( e );
+        }
+
         private void update( long progress )
         {
             start();
@@ -529,15 +558,19 @@ public abstract class Progress
         private long totalCount = 0;
         private final Completion completion = new Completion();
 
+        public Aggregator( Indicator indicator )
+        {
+            this.indicator = indicator;
+        }
+
         synchronized void add( MultiPartProgress progress )
         {
             states.put( progress, MultiPartProgress.State.INIT );
             this.totalCount += progress.totalCount;
         }
 
-        synchronized Completion initialize( Indicator indicator )
+        synchronized Completion initialize()
         {
-            this.indicator = indicator;
             indicator.startProcess( totalCount );
             if ( states.isEmpty() )
             {
@@ -582,6 +615,11 @@ public abstract class Progress
                     completion.complete();
                 }
             }
+        }
+
+        public void signalFailure( Throwable e )
+        {
+            completion.signalFailure( e );
         }
     }
 }

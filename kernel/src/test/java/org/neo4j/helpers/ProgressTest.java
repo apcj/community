@@ -50,6 +50,7 @@ import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
@@ -89,7 +90,7 @@ public class ProgressTest
         Progress.MultiPartBuilder builder = factory.mock( indicator, 10 ).multipleParts( testName.getMethodName() );
         Progress first = builder.progressForPart( "first", 5 );
         Progress other = builder.progressForPart( "other", 5 );
-        builder.complete();
+        builder.build();
         InOrder order = inOrder( indicator );
         order.verify( indicator ).startProcess( 10 );
         order.verifyNoMoreInteractions();
@@ -137,7 +138,7 @@ public class ProgressTest
         Progress.MultiPartBuilder builder = factory.mock( indicatorMock(), 10 )
                                                    .multipleParts( testName.getMethodName() );
         builder.progressForPart( "first", 10 );
-        builder.complete();
+        builder.build();
 
         // when
         try
@@ -206,7 +207,7 @@ public class ProgressTest
         Progress.MultiPartBuilder builder = factory.mock( indicator, 10 ).multipleParts( testName.getMethodName() );
         Progress first = builder.progressForPart( "first", 5 );
         Progress other = builder.progressForPart( "other", 5 );
-        builder.complete();
+        builder.build();
         InOrder order = inOrder( indicator );
         order.verify( indicator ).startProcess( 10 );
         order.verifyNoMoreInteractions();
@@ -253,7 +254,7 @@ public class ProgressTest
         Progress.MultiPartBuilder builder = factory.mock( indicator, 10 ).multipleParts( testName.getMethodName() );
 
         // when
-        builder.complete();
+        builder.build();
 
         // then
         InOrder order = inOrder( indicator );
@@ -390,7 +391,7 @@ public class ProgressTest
         Progress.MultiPartBuilder builder = Progress.Factory.NONE.multipleParts( testName.getMethodName() );
         Progress part1 = builder.progressForPart( "part1", 1 );
         Progress part2 = builder.progressForPart( "part2", 1 );
-        final Progress.Completion completion = builder.complete();
+        final Progress.Completion completion = builder.build();
 
         // when
         final CountDownLatch begin = new CountDownLatch( 1 ), end = new CountDownLatch( 1 );
@@ -452,7 +453,7 @@ public class ProgressTest
     public void shouldNotAllowNullCompletionCallbacks() throws Exception
     {
         Progress.MultiPartBuilder builder = Progress.Factory.NONE.multipleParts( testName.getMethodName() );
-        Progress.Completion completion = builder.complete();
+        Progress.Completion completion = builder.build();
 
         // when
         try
@@ -473,7 +474,7 @@ public class ProgressTest
         // given
         Progress.MultiPartBuilder builder = Progress.Factory.NONE.multipleParts( testName.getMethodName() );
         Progress progress = builder.progressForPart( "only part", 1 );
-        Progress.Completion completion = builder.complete();
+        Progress.Completion completion = builder.build();
         Runnable callback = mock( Runnable.class );
         doThrow( RuntimeException.class ).doNothing().when( callback ).run();
         completion.notify( callback );
@@ -512,15 +513,15 @@ public class ProgressTest
 
         // when
         part1.add( 1 );
-        builder.complete();
+        builder.build();
         part2.add( 1 );
         part1.done();
         part2.done();
 
         // then
         InOrder order = inOrder( indicator );
-        order.verify( indicator ).startProcess( 2 );
         order.verify( indicator ).startPart( "part1", 1 );
+        order.verify( indicator ).startProcess( 2 );
         order.verify( indicator ).startPart( "part2", 1 );
         order.verify( indicator ).completePart( "part1" );
         order.verify( indicator ).completePart( "part2" );
