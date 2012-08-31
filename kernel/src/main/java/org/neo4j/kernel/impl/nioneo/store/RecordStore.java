@@ -62,6 +62,13 @@ public interface RecordStore<R extends AbstractBaseRecord>
 
     public static abstract class Processor
     {
+        private boolean continueScanning = true;
+
+        public void stopScanning()
+        {
+            continueScanning = false;
+        }
+
         public void processNode( RecordStore<NodeRecord> store, NodeRecord node )
         {
             processRecord( NodeRecord.class, store, node );
@@ -126,6 +133,10 @@ public interface RecordStore<R extends AbstractBaseRecord>
                         {
                             scan: while ( id <= highId && id >= 0 )
                             {
+                                if (!continueScanning)
+                                {
+                                    return null;
+                                }
                                 R record = getRecord( store, id++ );
                                 for ( Predicate<? super R> filter : filters )
                                 {
