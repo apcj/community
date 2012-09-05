@@ -31,6 +31,8 @@ public interface RecordStore<R extends AbstractBaseRecord>
 {
     String getStorageFileName();
 
+    WindowPoolStats getWindowPoolStats();
+
     public long getHighId();
 
     public R getRecord( long id );
