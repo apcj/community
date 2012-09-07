@@ -21,6 +21,7 @@ package org.neo4j.kernel.impl.nioneo.store;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import org.neo4j.kernel.IdGeneratorFactory;
 import org.neo4j.kernel.IdType;
 import org.neo4j.kernel.configuration.Config;
@@ -119,6 +120,12 @@ public class RelationshipStore extends AbstractStore implements Store, RecordSto
     public RelationshipRecord forceGetRaw( RelationshipRecord record )
     {
         return record;
+    }
+
+    @Override
+    public RelationshipRecord forceGetRaw( long id )
+    {
+        return forceGetRecord( id );
     }
 
     public RelationshipRecord getLightRel( long id )

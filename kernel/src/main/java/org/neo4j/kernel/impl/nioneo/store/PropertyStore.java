@@ -399,6 +399,12 @@ public class PropertyStore extends AbstractStore implements Store, RecordStore<P
         return record;
     }
 
+    @Override
+    public PropertyRecord forceGetRaw( long id )
+    {
+        return forceGetRecord( id );
+    }
+
     private PropertyRecord getRecordFromBuffer( long id, Buffer buffer )
     {
         int offsetAtBeggining = buffer.getOffset();

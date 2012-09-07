@@ -22,9 +22,9 @@ package org.neo4j.kernel.impl.nioneo.store;
 import java.util.Iterator;
 
 import org.neo4j.helpers.Predicate;
-import org.neo4j.helpers.progress.ProgressListener;
 import org.neo4j.helpers.collection.IterableWrapper;
 import org.neo4j.helpers.collection.PrefetchingIterator;
+import org.neo4j.helpers.progress.ProgressListener;
 import org.neo4j.kernel.IdType;
 
 public interface RecordStore<R extends AbstractBaseRecord>
@@ -42,6 +42,8 @@ public interface RecordStore<R extends AbstractBaseRecord>
     public R forceGetRecord( long id );
 
     public R forceGetRaw( R record );
+
+    public R forceGetRaw( long id );
 
     public void forceUpdateRecord( R record );
 

@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+
 import org.neo4j.kernel.IdGeneratorFactory;
 import org.neo4j.kernel.IdType;
 import org.neo4j.kernel.configuration.Config;
@@ -215,6 +216,12 @@ public abstract class AbstractNameStore<T extends AbstractNameRecord> extends Ab
     public T forceGetRaw( T record )
     {
         return record;
+    }
+
+    @Override
+    public T forceGetRaw( long id )
+    {
+        return forceGetRecord( id );
     }
 
     public Collection<DynamicRecord> allocateNameRecords( int nameId, byte[] chars )

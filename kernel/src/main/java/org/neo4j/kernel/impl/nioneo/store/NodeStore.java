@@ -21,6 +21,7 @@ package org.neo4j.kernel.impl.nioneo.store;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import org.neo4j.kernel.IdGeneratorFactory;
 import org.neo4j.kernel.IdType;
 import org.neo4j.kernel.configuration.Config;
@@ -111,6 +112,12 @@ public class NodeStore extends AbstractStore implements Store, RecordStore<NodeR
     public NodeRecord forceGetRaw( NodeRecord record )
     {
         return record;
+    }
+
+    @Override
+    public NodeRecord forceGetRaw( long id )
+    {
+        return forceGetRecord( id );
     }
 
     public void updateRecord( NodeRecord record, boolean recovered )
