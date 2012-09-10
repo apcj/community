@@ -86,7 +86,8 @@ public class StoreVersionTest
         Config config = new Config( new ConfigurationDefaults(GraphDatabaseSettings.class).apply( new HashMap<String,String>() ));
         
         try {
-            new NodeStore( workingFile.getPath(), config, new DefaultIdGeneratorFactory(), fileSystem, StringLogger.SYSTEM );
+            new NodeStore( workingFile.getPath(), config, new DefaultIdGeneratorFactory(),
+                    new DefaultWindowPoolFactory(), fileSystem, StringLogger.SYSTEM );
             fail( "Should have thrown exception" );
         } catch ( NotCurrentStoreVersionException e ) {
             //expected

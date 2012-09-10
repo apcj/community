@@ -61,10 +61,14 @@ public class PropertyStore extends AbstractStore implements Store, RecordStore<P
     private PropertyIndexStore propertyIndexStore;
     private DynamicArrayStore arrayPropertyStore;
 
-    public PropertyStore(String fileName, Config configuration, IdGeneratorFactory idGeneratorFactory, FileSystemAbstraction fileSystemAbstraction, StringLogger stringLogger,
-                         DynamicStringStore stringPropertyStore, PropertyIndexStore propertyIndexStore, DynamicArrayStore arrayPropertyStore)
+    public PropertyStore(String fileName, Config configuration,
+                         IdGeneratorFactory idGeneratorFactory, WindowPoolFactory windowPoolFactory,
+                         FileSystemAbstraction fileSystemAbstraction, StringLogger stringLogger,
+                         DynamicStringStore stringPropertyStore, PropertyIndexStore propertyIndexStore,
+                         DynamicArrayStore arrayPropertyStore)
     {
-        super( fileName, configuration, IdType.PROPERTY, idGeneratorFactory, fileSystemAbstraction, stringLogger );
+        super( fileName, configuration, IdType.PROPERTY, idGeneratorFactory, windowPoolFactory,
+                fileSystemAbstraction, stringLogger );
         this.stringPropertyStore = stringPropertyStore;
         this.propertyIndexStore = propertyIndexStore;
         this.arrayPropertyStore = arrayPropertyStore;

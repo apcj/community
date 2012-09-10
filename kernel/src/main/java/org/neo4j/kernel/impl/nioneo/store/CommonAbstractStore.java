@@ -64,7 +64,8 @@ public abstract class CommonAbstractStore
         .getLogger( CommonAbstractStore.class.getName() );
 
     protected Config configuration;
-    protected IdGeneratorFactory idGeneratorFactory;
+    private final IdGeneratorFactory idGeneratorFactory;
+    private final WindowPoolFactory windowPoolFactory;
     protected FileSystemAbstraction fileSystemAbstraction;
 
     protected final String storageFileName;
@@ -72,7 +73,7 @@ public abstract class CommonAbstractStore
     protected StringLogger stringLogger;
     private IdGenerator idGenerator = null;
     private FileChannel fileChannel = null;
-    private PersistenceWindowPool windowPool;
+    private WindowPool windowPool;
     private boolean storeOk = true;
     private Throwable causeOfStoreNotOk;
     private FileLock fileLock;
@@ -97,13 +98,16 @@ public abstract class CommonAbstractStore
      *
      * @param idType
      *            The Id used to index into this store
+     * @param windowPoolFactory
      */
     public CommonAbstractStore( String fileName, Config configuration, IdType idType,
-                                IdGeneratorFactory idGeneratorFactory, FileSystemAbstraction fileSystemAbstraction, StringLogger stringLogger)
+                                IdGeneratorFactory idGeneratorFactory, WindowPoolFactory windowPoolFactory,
+                                FileSystemAbstraction fileSystemAbstraction, StringLogger stringLogger )
     {
         this.storageFileName = fileName;
         this.configuration = configuration;
         this.idGeneratorFactory = idGeneratorFactory;
+        this.windowPoolFactory = windowPoolFactory;
         this.fileSystemAbstraction = fileSystemAbstraction;
         this.idType = idType;
         this.stringLogger = stringLogger;
@@ -220,9 +224,9 @@ public abstract class CommonAbstractStore
         }
         loadIdGenerator();
 
-        setWindowPool( new PersistenceWindowPool( getStorageFileName(),
+        this.windowPool = windowPoolFactory.create( getStorageFileName(),
             getEffectiveRecordSize(), getFileChannel(), calculateMappedMemory(configuration.getParams(), storageFileName ),
-            configuration.get( Configuration.use_memory_mapped_buffers ), isReadOnly() && !isBackupSlave(), stringLogger ) );
+            configuration.get( Configuration.use_memory_mapped_buffers ), isReadOnly() && !isBackupSlave(), stringLogger );
     }
 
     protected abstract int getEffectiveRecordSize();
@@ -356,7 +360,7 @@ public abstract class CommonAbstractStore
      * @param pool
      *            The window pool this store should use
      */
-    protected void setWindowPool( PersistenceWindowPool pool )
+    protected void setWindowPool( WindowPool pool )
     {
         this.windowPool = pool;
     }
