@@ -35,6 +35,9 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.internal.matchers.TypeSafeMatcher;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
+import org.junit.runners.Suite;
 import org.neo4j.kernel.DefaultFileSystemAbstraction;
 import org.neo4j.kernel.DefaultIdGeneratorFactory;
 import org.neo4j.kernel.DefaultLastCommittedTxIdSetter;
@@ -44,14 +47,69 @@ import org.neo4j.kernel.configuration.ConfigurationDefaults;
 import org.neo4j.kernel.impl.util.StringLogger;
 import org.neo4j.test.TargetDirectory;
 
-public class TestRandomAccessMemoryMapping
+@RunWith(Suite.class)
+@Suite.SuiteClasses({
+        TestRandomAccessMemoryMapping.MissDrivenRemap.class,
+        TestRandomAccessMemoryMapping.AlwaysRemap.class
+})
+@Ignore("to be replaced with more fine grained test")
+public abstract class TestRandomAccessMemoryMapping
 {
+    @Test
+    public void shouldAchieveHitRationConsistentWithMappedRatioWhenAccessingRecordsRandomly() throws Exception
+    {
+        // when
+        Random random = new Random();
+        for ( int i = 0; i < TOTAL_RECORDS; i++ )
+        {
+            nodeStore.getRecord( random.nextInt( TOTAL_RECORDS ) );
+        }
+
+        // then
+        assertThat( nodeStore.getWindowPoolStats(), hasHitRatioGreaterThan( 0.4f ) );
+    }
+
+    @Test
+    public void shouldAchieveHighHitRatioWhenScanningLinearly() throws Exception
+    {
+        // when
+        for ( int i = 0; i < TOTAL_RECORDS; i++ )
+        {
+            nodeStore.getRecord( i );
+        }
+
+        // then
+        assertThat( nodeStore.getWindowPoolStats(), hasHitRatioGreaterThan( 0.8f ) );
+    }
+
+    @RunWith(JUnit4.class)
+    public static class MissDrivenRemap extends TestRandomAccessMemoryMapping
+    {
+        @Override
+        WindowPoolFactory windowPoolFactory()
+        {
+            return new DefaultWindowPoolFactory();
+        }
+    }
+
+    @RunWith(JUnit4.class)
+    public static class AlwaysRemap extends TestRandomAccessMemoryMapping
+    {
+        @Override
+        WindowPoolFactory windowPoolFactory()
+        {
+            return new AlwaysRemapWindowPoolFactory();
+        }
+    }
+
     private static final int MEGA = 1024 * 1024;
 
     public static final int MAPPED_RECORDS = 1000000;
     public static final int TOTAL_RECORDS = MAPPED_RECORDS * 2;
 
     private NodeStore nodeStore;
+
+    abstract WindowPoolFactory windowPoolFactory();
 
     @Before
     public void checkNotRunningOnWindowsBecauseMemoryMappingDoesNotWorkProperlyThere()
@@ -71,36 +129,9 @@ public class TestRandomAccessMemoryMapping
         createStore( fileName, TOTAL_RECORDS, config );
 
         nodeStore = new NodeStore( fileName, config, new DefaultIdGeneratorFactory(),
-                new DefaultWindowPoolFactory(), new DefaultFileSystemAbstraction(), StringLogger.SYSTEM );
+                windowPoolFactory(), new DefaultFileSystemAbstraction(), StringLogger.SYSTEM );
     }
 
-    @Test
-    public void shouldAchieveHitRationConsistentWithMappedRatioWhenAccessingRecordsRandomly() throws Exception
-    {
-        // when
-        Random random = new Random();
-        for ( int i = 0; i < TOTAL_RECORDS; i++ )
-        {
-            nodeStore.getRecord( random.nextInt( TOTAL_RECORDS ) );
-        }
-
-        // then
-        assertThat( nodeStore.getWindowPoolStats(), hasHitRatioGreaterThan( 0.4f ) );
-    }
-
-    @Test
-    @Ignore("current implementation not good enough to achieve this target")
-    public void shouldAchieveHighHitRatioWhenScanningLinearly() throws Exception
-    {
-        // when
-        for ( int i = 0; i < TOTAL_RECORDS; i++ )
-        {
-            nodeStore.getRecord( i );
-        }
-
-        // then
-        assertThat( nodeStore.getWindowPoolStats(), hasHitRatioGreaterThan( 0.8f ) );
-    }
 
     private Matcher<WindowPoolStats> hasHitRatioGreaterThan( final float ratio )
     {
@@ -109,6 +140,7 @@ public class TestRandomAccessMemoryMapping
             @Override
             public boolean matchesSafely( WindowPoolStats stats )
             {
+                System.out.println( stats );
                 return stats.getHitCount() > TOTAL_RECORDS * ratio;
             }
 
