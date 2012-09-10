@@ -6,6 +6,7 @@ import javax.transaction.xa.Xid;
 
 import org.neo4j.kernel.impl.nioneo.store.AbstractNameRecord;
 import org.neo4j.kernel.impl.nioneo.store.DynamicRecord;
+import org.neo4j.kernel.impl.nioneo.store.NeoStoreRecord;
 import org.neo4j.kernel.impl.nioneo.store.NodeRecord;
 import org.neo4j.kernel.impl.nioneo.store.PropertyIndexRecord;
 import org.neo4j.kernel.impl.nioneo.store.PropertyRecord;
@@ -83,6 +84,11 @@ public class TransactionWriter
     {
         write( new Command.RelationshipTypeCommand( null,
                                                     withName( new RelationshipTypeRecord( id ), dynamicIds, label ) ) );
+    }
+
+    public void update( NeoStoreRecord record ) throws IOException
+    {
+        write( new Command.NeoStoreCommand( null, record ) );
     }
 
     public void create( NodeRecord node ) throws IOException

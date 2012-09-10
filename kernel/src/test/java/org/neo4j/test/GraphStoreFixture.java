@@ -10,6 +10,7 @@ import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.kernel.EmbeddedGraphDatabase;
+import org.neo4j.kernel.impl.nioneo.store.NeoStoreRecord;
 import org.neo4j.kernel.impl.nioneo.store.NodeRecord;
 import org.neo4j.kernel.impl.nioneo.store.PropertyRecord;
 import org.neo4j.kernel.impl.nioneo.store.RelationshipRecord;
@@ -132,6 +133,18 @@ public abstract class GraphStoreFixture implements TestRule
             try
             {
                 writer.create( node );
+            }
+            catch ( IOException e )
+            {
+                throw ioError( e );
+            }
+        }
+
+        public void update( NeoStoreRecord record )
+        {
+            try
+            {
+                writer.update( record );
             }
             catch ( IOException e )
             {
