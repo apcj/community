@@ -30,6 +30,7 @@ import java.util.Random;
 
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -50,8 +51,7 @@ public class TestRandomAccessMemoryMapping
     public static final int MAPPED_RECORDS = 1000000;
     public static final int TOTAL_RECORDS = MAPPED_RECORDS * 2;
 
-    File storeDir = TargetDirectory.forTest( getClass() ).graphDbDir( true );
-    String fileName = new File( storeDir, NeoStore.DEFAULT_NAME + ".nodestore.db" ).getPath();
+    private NodeStore nodeStore;
 
     @Before
     public void checkNotRunningOnWindowsBecauseMemoryMappingDoesNotWorkProperlyThere()
@@ -59,17 +59,24 @@ public class TestRandomAccessMemoryMapping
         assumeTrue( !osIsWindows() );
     }
 
-    @Test
-    public void shouldAchieveHitRationConsistentWithMappedRatioWhenAccessingRecordsRandomly() throws Exception
+    @Before
+    public void createStore()
     {
         // given
-        Config config = configTunedToMapAPreciseNumberOfRecords();
+        File storeDir = TargetDirectory.forTest( getClass() ).graphDbDir( true );
+        Config config = configTunedToMapAPreciseNumberOfRecords( storeDir );
+
+        String fileName = new File( storeDir, NeoStore.DEFAULT_NAME + ".nodestore.db" ).getPath();
 
         createStore( fileName, TOTAL_RECORDS, config );
 
-        NodeStore nodeStore = new NodeStore( fileName, config, new DefaultIdGeneratorFactory(),
+        nodeStore = new NodeStore( fileName, config, new DefaultIdGeneratorFactory(),
                 new DefaultWindowPoolFactory(), new DefaultFileSystemAbstraction(), StringLogger.SYSTEM );
+    }
 
+    @Test
+    public void shouldAchieveHitRationConsistentWithMappedRatioWhenAccessingRecordsRandomly() throws Exception
+    {
         // when
         Random random = new Random();
         for ( int i = 0; i < TOTAL_RECORDS; i++ )
@@ -78,25 +85,13 @@ public class TestRandomAccessMemoryMapping
         }
 
         // then
-        WindowPoolStats stats = nodeStore.getWindowPoolStats();
-
-        nodeStore.close();
-
-        assertThat( stats, hasHitRatioGreaterThan( 0.4f ) );
+        assertThat( nodeStore.getWindowPoolStats(), hasHitRatioGreaterThan( 0.4f ) );
     }
 
     @Test
     @Ignore("current implementation not good enough to achieve this target")
     public void shouldAchieveHighHitRatioWhenScanningLinearly() throws Exception
     {
-        // given
-        Config config = configTunedToMapAPreciseNumberOfRecords();
-
-        createStore( fileName, TOTAL_RECORDS, config );
-
-        NodeStore nodeStore = new NodeStore( fileName, config, new DefaultIdGeneratorFactory(),
-                new DefaultWindowPoolFactory(), new DefaultFileSystemAbstraction(), StringLogger.SYSTEM );
-
         // when
         for ( int i = 0; i < TOTAL_RECORDS; i++ )
         {
@@ -104,11 +99,7 @@ public class TestRandomAccessMemoryMapping
         }
 
         // then
-        WindowPoolStats stats = nodeStore.getWindowPoolStats();
-
-        nodeStore.close();
-
-        assertThat( stats, hasHitRatioGreaterThan( 0.8f ) );
+        assertThat( nodeStore.getWindowPoolStats(), hasHitRatioGreaterThan( 0.8f ) );
     }
 
     private Matcher<WindowPoolStats> hasHitRatioGreaterThan( final float ratio )
@@ -129,7 +120,7 @@ public class TestRandomAccessMemoryMapping
         };
     }
 
-    private Config configTunedToMapAPreciseNumberOfRecords()
+    private Config configTunedToMapAPreciseNumberOfRecords( File storeDir )
     {
         return new Config( new ConfigurationDefaults( NodeStore.Configuration.class ).apply( stringMap(
                     nodestore_mapped_memory_size.name(), mmapSize( MAPPED_RECORDS, NodeStore.RECORD_SIZE ),
@@ -169,5 +160,11 @@ public class TestRandomAccessMemoryMapping
             throw new IllegalArgumentException( "too few records: " + numberOfRecords );
         }
         return bytes / MEGA + "M";
+    }
+
+    @After
+    public void closeStore()
+    {
+        nodeStore.close();
     }
 }
