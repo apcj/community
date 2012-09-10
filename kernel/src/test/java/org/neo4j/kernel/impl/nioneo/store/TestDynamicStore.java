@@ -51,6 +51,8 @@ public class TestDynamicStore
 {
     public static IdGeneratorFactory ID_GENERATOR_FACTORY =
             new DefaultIdGeneratorFactory();
+    public static WindowPoolFactory WINDOW_POOL_FACTORY =
+            new DefaultWindowPoolFactory();
     public static FileSystemAbstraction FILE_SYSTEM =
             new DefaultFileSystemAbstraction();
 
@@ -120,7 +122,8 @@ public class TestDynamicStore
 
     private DynamicArrayStore newStore()
     {
-        return new DynamicArrayStore( dynamicStoreFile(), config(), IdType.ARRAY_BLOCK, ID_GENERATOR_FACTORY, FILE_SYSTEM, StringLogger.SYSTEM);
+        return new DynamicArrayStore( dynamicStoreFile(), config(), IdType.ARRAY_BLOCK, ID_GENERATOR_FACTORY,
+                WINDOW_POOL_FACTORY, FILE_SYSTEM, StringLogger.SYSTEM);
     }
 
     private void deleteBothFiles()

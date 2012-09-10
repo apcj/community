@@ -44,9 +44,11 @@ public class RelationshipStore extends AbstractStore implements Store, RecordSto
     // second_next_rel_id+next_prop_id(int)
     public static final int RECORD_SIZE = 33;
 
-    public RelationshipStore(String fileName, Config configuration, IdGeneratorFactory idGeneratorFactory, FileSystemAbstraction fileSystemAbstraction, StringLogger stringLogger)
+    public RelationshipStore(String fileName, Config configuration, IdGeneratorFactory idGeneratorFactory,
+                             WindowPoolFactory windowPoolFactory, FileSystemAbstraction fileSystemAbstraction, StringLogger stringLogger)
     {
-        super(fileName, configuration, IdType.RELATIONSHIP, idGeneratorFactory, fileSystemAbstraction, stringLogger);
+        super(fileName, configuration, IdType.RELATIONSHIP, idGeneratorFactory,
+                windowPoolFactory, fileSystemAbstraction, stringLogger);
     }
 
     @Override

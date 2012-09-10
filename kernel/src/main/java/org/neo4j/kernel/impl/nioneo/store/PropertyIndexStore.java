@@ -39,9 +39,12 @@ public class PropertyIndexStore extends AbstractNameStore<PropertyIndexRecord>
     private static final int RECORD_SIZE = 1/*inUse*/ + 4/*prop count*/ + 4/*nameId*/;
 
     public PropertyIndexStore(String fileName, Config config,
-                              IdGeneratorFactory idGeneratorFactory, FileSystemAbstraction fileSystemAbstraction, StringLogger stringLogger, DynamicStringStore nameStore)
+                              IdGeneratorFactory idGeneratorFactory, WindowPoolFactory windowPoolFactory,
+                              FileSystemAbstraction fileSystemAbstraction, StringLogger stringLogger,
+                              DynamicStringStore nameStore)
     {
-        super(fileName, config, IdType.PROPERTY_INDEX, idGeneratorFactory, fileSystemAbstraction, stringLogger, nameStore);
+        super(fileName, config, IdType.PROPERTY_INDEX, idGeneratorFactory, windowPoolFactory,
+                fileSystemAbstraction, stringLogger, nameStore);
     }
 
     @Override

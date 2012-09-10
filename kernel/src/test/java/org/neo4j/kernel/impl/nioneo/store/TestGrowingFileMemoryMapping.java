@@ -66,7 +66,7 @@ public class TestGrowingFileMemoryMapping
         storeFactory.createEmptyStore( fileName, storeFactory.buildTypeDescriptorAndVersion(
                 NodeStore.TYPE_DESCRIPTOR ) );
 
-        NodeStore nodeStore = new NodeStore( fileName, config, idGeneratorFactory,
+        NodeStore nodeStore = new NodeStore( fileName, config, idGeneratorFactory, new DefaultWindowPoolFactory(),
                 new DefaultFileSystemAbstraction(), StringLogger.SYSTEM );
 
         // when

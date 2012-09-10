@@ -41,10 +41,12 @@ public abstract class AbstractNameStore<T extends AbstractNameRecord> extends Ab
     public static final int NAME_STORE_BLOCK_SIZE = 30;
 
     public AbstractNameStore(String fileName, Config configuration, IdType idType,
-                             IdGeneratorFactory idGeneratorFactory, FileSystemAbstraction fileSystemAbstraction, StringLogger stringLogger,
+                             IdGeneratorFactory idGeneratorFactory, WindowPoolFactory windowPoolFactory,
+                             FileSystemAbstraction fileSystemAbstraction, StringLogger stringLogger,
                              DynamicStringStore nameStore)
     {
-        super( fileName, configuration, idType, idGeneratorFactory, fileSystemAbstraction, stringLogger );
+        super( fileName, configuration, idType, idGeneratorFactory, windowPoolFactory,
+                fileSystemAbstraction, stringLogger );
         this.nameStore = nameStore;
     }
 

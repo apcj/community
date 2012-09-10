@@ -42,9 +42,10 @@ public class NodeStore extends AbstractStore implements Store, RecordStore<NodeR
     public static final int RECORD_SIZE = 9;
 
     public NodeStore(String fileName, Config config,
-                     IdGeneratorFactory idGeneratorFactory, FileSystemAbstraction fileSystemAbstraction, StringLogger stringLogger)
+                     IdGeneratorFactory idGeneratorFactory, WindowPoolFactory windowPoolFactory,
+                     FileSystemAbstraction fileSystemAbstraction, StringLogger stringLogger)
     {
-        super(fileName, config, IdType.NODE, idGeneratorFactory, fileSystemAbstraction, stringLogger);
+        super(fileName, config, IdType.NODE, idGeneratorFactory, windowPoolFactory, fileSystemAbstraction, stringLogger);
     }
 
     @Override
