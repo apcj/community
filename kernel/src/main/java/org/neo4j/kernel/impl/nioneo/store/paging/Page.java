@@ -21,7 +21,58 @@ package org.neo4j.kernel.impl.nioneo.store.paging;
 
 class Page
 {
-    Cart.CacheList inList = Cart.CacheList.none;
+    final int address;
+    CachedPageList currentList = null;
     boolean referenced = false;
     FilterBit filter = FilterBit.S;
+    Page prevPage;
+    Page nextPage;
+
+    Page( int address )
+    {
+        this.address = address;
+    }
+
+    public void moveToTailOf( CachedPageList targetList )
+    {
+        if ( currentList != null )
+        {
+            if ( prevPage != null )
+            {
+                prevPage.nextPage = nextPage;
+            }
+            if ( nextPage != null )
+            {
+                nextPage.prevPage = prevPage;
+            }
+            if ( currentList.head == this )
+            {
+                currentList.head = nextPage;
+            }
+            if ( currentList.tail == this )
+            {
+                currentList.tail = prevPage;
+            }
+            currentList.decrementSize();
+        }
+        prevPage = targetList.tail;
+        if (prevPage != null)
+        {
+            prevPage.nextPage = this;
+        }
+        nextPage = null;
+        targetList.tail = this;
+        if ( targetList.head == null )
+        {
+            targetList.head = this;
+        }
+        targetList.incrementSize();
+        this.currentList = targetList;
+    }
+
+    @Override
+    public String toString()
+    {
+        return String.format( "Page{address=%d, inAList=%b}", address, currentList != null );
+    }
 }
