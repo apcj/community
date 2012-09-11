@@ -19,8 +19,6 @@
  */
 package org.neo4j.kernel.impl.nioneo.store.paging;
 
-import java.util.LinkedList;
-
 public class Cart
 {
     private final Storage storage;
@@ -152,91 +150,6 @@ public class Cart
             storage.evict( page.address );
             b2.insertHead( page );
             nS--;
-        }
-    }
-
-    private static class SearchableList
-    {
-        LinkedList<Page> list = new LinkedList<Page>();
-
-        public boolean contains( int address )
-        {
-            return list.contains( new Page( address ) );
-        }
-
-        public Page head()
-        {
-            return list.getFirst();
-        }
-
-        public void setReferenced( int address )
-        {
-            list.get( list.indexOf( new Page( address ) ) ).referenced = true;
-        }
-
-        public int size()
-        {
-            return list.size();
-        }
-
-        public void append( int address )
-        {
-            list.addLast( new Page( address ) );
-        }
-
-        public void append( Page page )
-        {
-            list.addLast( page );
-        }
-
-        public Page removeHead()
-        {
-            return list.removeFirst();
-        }
-
-        public void removeLast()
-        {
-            list.removeLast();
-        }
-
-        public Page remove( int address )
-        {
-            return list.remove( list.indexOf( new Page( address ) ) );
-        }
-
-        public void insertHead( Page page )
-        {
-            list.add( 0, page );
-        }
-    }
-
-    private enum FilterBit
-    {
-        S, L
-    }
-
-    private static class Page
-    {
-        private int address;
-        private boolean referenced = false;
-        private FilterBit filter = FilterBit.S;
-
-        private Page( int address )
-        {
-            this.address = address;
-        }
-
-        @SuppressWarnings("EqualsWhichDoesntCheckParameterClass")
-        @Override
-        public boolean equals( Object o )
-        {
-            return ((Page) o).address == address;
-        }
-
-        @Override
-        public int hashCode()
-        {
-            return address;
         }
     }
 
