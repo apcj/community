@@ -19,15 +19,16 @@
  */
 package org.neo4j.kernel.impl.nioneo.store.paging;
 
-public class Cart
+public class Cart implements TemporalUtilityCounter
 {
     private final Storage storage;
     private final int capacity;
 
     private int p = 0;
     private int q = 0;
-    private int nS = 0;
-    private int nL = 0;
+    private int shortTermUtilityPageCount = 0;
+    private int longTermUtilityPageCount = 0;
+
     private CachedPageList recencyCache = new CachedPageList();
     private CachedPageList recencyHistory = new CachedPageList();
     private CachedPageList frequencyCache = new CachedPageList();
@@ -50,7 +51,7 @@ public class Cart
         Page page = allPages[address];
         if ( page.currentList == recencyCache || page.currentList == frequencyCache )
         {
-            page.referenced = true;
+            page.setReferenced();
             storage.hit( address );
             return; // hit
         }
@@ -66,38 +67,32 @@ public class Cart
             {
                 if ( recencyHistory.size() > max( 0, q ) || frequencyHistory.size() == 0 )
                 {
-                    recencyHistory.removeHead();
+                    recencyHistory.removeHead().setUtility( this, TemporalUtility.UNKNOWN );
                 }
                 else
                 {
-                    frequencyHistory.removeHead();
+                    frequencyHistory.removeHead().setUtility( this, TemporalUtility.UNKNOWN );
                 }
             }
         }
 
         if ( page.currentList == recencyHistory )
         {
-            p = min( p + max( 1, nS / recencyHistory.size() ), capacity );
-            page.moveToTailOf( recencyCache );
-            page.referenced = false;
-            page.filter = FilterBit.L;
-            nL++;
+            p = min( p + max( 1, shortTermUtilityPageCount / recencyHistory.size() ), capacity );
+            page.clearReference().moveToTailOf( recencyCache ).setUtility( this, TemporalUtility.LONG_TERM );
         }
         else if ( page.currentList == frequencyHistory )
         {
-            p = max( p - max( 1, nL / frequencyHistory.size() ), 0 );
-            page.moveToTailOf( recencyCache );
-            page.referenced = false;
-            nL++;
-            if ( frequencyCache.size() + frequencyHistory.size() + recencyCache.size() - nS >= capacity )
+            p = max( p - max( 1, longTermUtilityPageCount / frequencyHistory.size() ), 0 );
+            page.clearReference().moveToTailOf( recencyCache ).setUtility( this, TemporalUtility.LONG_TERM );
+            if ( frequencyCache.size() + frequencyHistory.size() + recencyCache.size() - shortTermUtilityPageCount >= capacity )
             {
                 q = min( q + 1, 2 * capacity - recencyCache.size() );
             }
         }
         else
         {
-            page.moveToTailOf( recencyCache );
-            nS++;
+            page.moveToTailOf( recencyCache ).setUtility( this, TemporalUtility.SHORT_TERM );
         }
 
         storage.load( address );
@@ -107,36 +102,28 @@ public class Cart
     {
         while ( frequencyCache.size() > 0 && frequencyCache.head.referenced )
         {
-            Page page = frequencyCache.head;
-            page.referenced = false;
-            page.moveToTailOf( recencyCache );
+            frequencyCache.head.clearReference().moveToTailOf( recencyCache );
 
-            if ( frequencyCache.size() + frequencyHistory.size() + recencyHistory.size() - nS >= capacity )
+            if ( frequencyCache.size() + frequencyHistory.size() + recencyHistory.size() - shortTermUtilityPageCount >= capacity )
             {
                 q = min( q + 1, 2 * capacity - recencyCache.size() );
             }
         }
 
-        while ( recencyCache.size() > 0 && (recencyCache.head.filter == FilterBit.L || recencyCache.head.referenced) )
+        while ( recencyCache.size() > 0 && (recencyCache.head.utility == TemporalUtility.LONG_TERM || recencyCache.head.referenced) )
         {
             if ( recencyCache.head.referenced )
             {
-                Page page = recencyCache.head;
-                page.referenced = false;
-                page.moveToTailOf( recencyCache );
+                Page page = recencyCache.head.clearReference().moveToTailOf( recencyCache );
 
-                if ( recencyCache.size() > min( p + 1, recencyHistory.size() ) && page.filter == FilterBit.S )
+                if ( recencyCache.size() > min( p + 1, recencyHistory.size() ) && page.utility == TemporalUtility.SHORT_TERM )
                 {
-                    page.filter = FilterBit.L;
-                    nS--;
-                    nL++;
+                    page.setUtility( this, TemporalUtility.LONG_TERM );
                 }
             }
             else
             {
-                Page page = recencyCache.head;
-                page.referenced = false;
-                page.moveToTailOf( frequencyCache );
+                recencyCache.head.clearReference().moveToTailOf( frequencyCache );
 
                 q = max( q - 1, capacity - recencyCache.size() );
             }
@@ -145,14 +132,13 @@ public class Cart
         if ( recencyCache.size() >= max( 1, p ) )
         {
             storage.evict( recencyCache.head.address );
-            recencyCache.head.moveToTailOf( recencyHistory );
+            recencyCache.head.moveToTailOf( recencyHistory ).setUtility( this, TemporalUtility.LONG_TERM );
         }
         else
         {
             storage.evict( frequencyCache.head.address );
-            frequencyCache.head.moveToTailOf( frequencyHistory );
+            frequencyCache.head.moveToTailOf( frequencyHistory ).setUtility( this, TemporalUtility.SHORT_TERM );
         }
-        nS--;
     }
 
     private static int min( int i1, int i2 )
@@ -163,6 +149,34 @@ public class Cart
     private static int max( int i1, int i2 )
     {
         return i1 > i2 ? i1 : i2;
+    }
+
+    @Override
+    public void increment( TemporalUtility utility )
+    {
+        switch ( utility )
+        {
+            case SHORT_TERM:
+                shortTermUtilityPageCount++;
+                break;
+            case LONG_TERM:
+                longTermUtilityPageCount++;
+                break;
+        }
+    }
+
+    @Override
+    public void decrement( TemporalUtility utility )
+    {
+        switch ( utility )
+        {
+            case SHORT_TERM:
+                shortTermUtilityPageCount--;
+                break;
+            case LONG_TERM:
+                longTermUtilityPageCount--;
+                break;
+        }
     }
 
     public interface Storage

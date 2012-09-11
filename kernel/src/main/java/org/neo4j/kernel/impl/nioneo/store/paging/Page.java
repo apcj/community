@@ -22,9 +22,11 @@ package org.neo4j.kernel.impl.nioneo.store.paging;
 class Page
 {
     final int address;
-    CachedPageList currentList = null;
+
     boolean referenced = false;
-    FilterBit filter = FilterBit.S;
+    TemporalUtility utility = TemporalUtility.UNKNOWN;
+
+    CachedPageList currentList = null;
     Page prevPage;
     Page nextPage;
 
@@ -33,7 +35,7 @@ class Page
         this.address = address;
     }
 
-    public void moveToTailOf( CachedPageList targetList )
+    Page moveToTailOf( CachedPageList targetList )
     {
         if ( currentList != null )
         {
@@ -56,7 +58,7 @@ class Page
             currentList.decrementSize();
         }
         prevPage = targetList.tail;
-        if (prevPage != null)
+        if ( prevPage != null )
         {
             prevPage.nextPage = this;
         }
@@ -68,6 +70,27 @@ class Page
         }
         targetList.incrementSize();
         this.currentList = targetList;
+
+        return this;
+    }
+
+    Page setReferenced()
+    {
+        referenced = true;
+        return this;
+    }
+
+    Page clearReference()
+    {
+        referenced = false;
+        return this;
+    }
+
+    Page setUtility( TemporalUtilityCounter counter, TemporalUtility utility )
+    {
+        counter.decrement( this.utility );
+        counter.increment( this.utility = utility );
+        return this;
     }
 
     @Override

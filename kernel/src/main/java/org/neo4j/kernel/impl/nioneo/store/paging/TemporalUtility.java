@@ -19,7 +19,9 @@
  */
 package org.neo4j.kernel.impl.nioneo.store.paging;
 
-enum FilterBit
+enum TemporalUtility
 {
-    S, L
+    UNKNOWN,
+    SHORT_TERM,
+    LONG_TERM,
 }

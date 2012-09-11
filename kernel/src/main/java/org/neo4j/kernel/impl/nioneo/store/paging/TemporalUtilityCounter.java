@@ -19,39 +19,9 @@
  */
 package org.neo4j.kernel.impl.nioneo.store.paging;
 
-class CachedPageList
+public interface TemporalUtilityCounter
 {
-    Page head, tail;
-    int size = 0;
+    void increment( TemporalUtility utility );
 
-    public int size()
-    {
-        return size;
-    }
-
-    public Page removeHead()
-    {
-        Page removedPage = head;
-        head = removedPage.nextPage;
-        removedPage.nextPage = null;
-        removedPage.currentList = null;
-        decrementSize();
-        return removedPage;
-    }
-
-    public void incrementSize()
-    {
-        size++;
-    }
-
-    public void decrementSize()
-    {
-        size--;
-    }
-
-    @Override
-    public String toString()
-    {
-        return String.format( "CachedPageList{head=%s, tail=%s, size=%d}", head, tail, size );
-    }
+    void decrement( TemporalUtility utility );
 }
