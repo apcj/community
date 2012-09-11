@@ -28,10 +28,10 @@ public class Cart
     private int q = 0;
     private int nS = 0;
     private int nL = 0;
-    private SearchableList t1 = new SearchableList(CacheList.T1, this);
-    private SearchableList b1 = new SearchableList(CacheList.B1, this);
-    private SearchableList t2 = new SearchableList(CacheList.T2, this);
-    private SearchableList b2 = new SearchableList(CacheList.B2, this);
+    private SearchableList t1 = new SearchableList( CacheList.T1, this );
+    private SearchableList b1 = new SearchableList( CacheList.B1, this );
+    private SearchableList t2 = new SearchableList( CacheList.T2, this );
+    private SearchableList b2 = new SearchableList( CacheList.B2, this );
     Page[] allPages;
 
     public Cart( Storage storage, int capacity, int maxAddress )
@@ -48,9 +48,10 @@ public class Cart
     public void acquire( int address )
     {
         Page page = allPages[address];
-        if (page.inList == CacheList.T1 || page.inList == CacheList.T2)
+        if ( page.inList == CacheList.T1 || page.inList == CacheList.T2 )
         {
             page.referenced = true;
+            storage.hit( address );
             return; // hit
         }
 
@@ -169,6 +170,8 @@ public class Cart
 
     public interface Storage
     {
+        void hit( int address );
+
         void load( int address );
 
         void evict( int address );
