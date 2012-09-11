@@ -28,36 +28,39 @@ public class Cart
     private int q = 0;
     private int nS = 0;
     private int nL = 0;
-    private SearchableList t1 = new SearchableList();
-    private SearchableList b1 = new SearchableList();
-    private SearchableList t2 = new SearchableList();
-    private SearchableList b2 = new SearchableList();
+    private SearchableList t1 = new SearchableList(CacheList.T1, this);
+    private SearchableList b1 = new SearchableList(CacheList.B1, this);
+    private SearchableList t2 = new SearchableList(CacheList.T2, this);
+    private SearchableList b2 = new SearchableList(CacheList.B2, this);
+    Page[] allPages;
 
-    public Cart( Storage storage, int capacity )
+    public Cart( Storage storage, int capacity, int maxAddress )
     {
         this.storage = storage;
         this.capacity = capacity;
+        allPages = new Page[maxAddress];
+        for ( int i = 0; i < maxAddress; i++ )
+        {
+            allPages[i] = new Page();
+        }
     }
 
     public void acquire( int address )
     {
-        if ( t1.contains( address ) )
+        Page page = allPages[address];
+        if (page.inList == CacheList.T1 || page.inList == CacheList.T2)
         {
-            t1.setReferenced( address );
+            page.referenced = true;
             return; // hit
         }
-        if ( t2.contains( address ) )
-        {
-            t2.setReferenced( address );
-            return; // hit
-        }
+
         if ( t1.size() + t2.size() == capacity )
         {
             // cache full
             replace();
 
             // history replace
-            if ( !b1.contains( address ) && !b2.contains( address )
+            if ( page.inList != CacheList.B1 && page.inList != CacheList.B2
                     && b1.size() + b2.size() == capacity + 1 )
             {
                 if ( b1.size() > max( 0, q ) || b2.size() == 0 )
@@ -71,20 +74,20 @@ public class Cart
             }
         }
 
-        if ( b1.contains( address ) )
+        if ( page.inList == CacheList.B1 )
         {
             p = min( p + max( 1, nS / b1.size() ), capacity );
-            Page page = b1.remove( address );
-            t1.append( page );
+            b1.remove( address );
+            t1.append( address );
             page.referenced = false;
             page.filter = FilterBit.L;
             nL++;
         }
-        else if ( b2.contains( address ) )
+        else if ( page.inList == CacheList.B2 )
         {
             p = max( p - max( 1, nL / b2.size() ), 0 );
-            Page page = b2.remove( address );
-            t1.append( page );
+            b2.remove( address );
+            t1.append( address );
             page.referenced = false;
             nL++;
             if ( t2.size() + b2.size() + t1.size() - nS >= capacity )
@@ -103,24 +106,25 @@ public class Cart
 
     private void replace()
     {
-        while ( t2.size() > 0 && t2.head().referenced )
+        while ( t2.size() > 0 && allPages[t2.head()].referenced )
         {
-            Page page = t2.removeHead();
-            page.referenced = false;
-            t1.append( page );
+            int address = t2.removeHead();
+            allPages[address].referenced = false;
+            t1.append( address );
             if ( t2.size() + b2.size() + b1.size() - nS >= capacity )
             {
                 q = min( q + 1, 2 * capacity - t1.size() );
             }
         }
 
-        while ( t1.size() > 0 && (t1.head().filter == FilterBit.L || t1.head().referenced) )
+        while ( t1.size() > 0 && (allPages[t1.head()].filter == FilterBit.L || allPages[t1.head()].referenced) )
         {
-            if ( t1.head().referenced )
+            if ( allPages[t1.head()].referenced )
             {
-                Page page = t1.removeHead();
+                int address = t1.removeHead();
+                Page page = allPages[address];
                 page.referenced = false;
-                t1.append( page );
+                t1.append( address );
                 if ( t1.size() > min( p + 1, b1.size() ) && page.filter == FilterBit.S )
                 {
                     page.filter = FilterBit.L;
@@ -130,25 +134,25 @@ public class Cart
             }
             else
             {
-                Page page = t1.removeHead();
-                page.referenced = false;
-                t2.append( page );
+                int address = t1.removeHead();
+                allPages[address].referenced = false;
+                t2.append( address );
                 q = max( q - 1, capacity - t1.size() );
             }
         }
 
         if ( t1.size() >= max( 1, p ) )
         {
-            Page page = t1.removeHead();
-            storage.evict( page.address );
-            b1.insertHead( page );
+            int address = t1.removeHead();
+            storage.evict( address );
+            b1.insertHead( address );
             nS--;
         }
         else
         {
-            Page page = t2.removeHead();
-            storage.evict( page.address );
-            b2.insertHead( page );
+            int address = t2.removeHead();
+            storage.evict( address );
+            b2.insertHead( address );
             nS--;
         }
     }
@@ -168,5 +172,10 @@ public class Cart
         void load( int address );
 
         void evict( int address );
+    }
+
+    enum CacheList
+    {
+        none, T1, T2, B1, B2
     }
 }

@@ -23,21 +23,19 @@ import java.util.LinkedList;
 
 class SearchableList
 {
-    LinkedList<Page> list = new LinkedList<Page>();
+    LinkedList<Integer> list = new LinkedList<Integer>();
+    private final Cart.CacheList listName;
+    private final Cart cart;
 
-    public boolean contains( int address )
+    public SearchableList( Cart.CacheList listName, Cart cart )
     {
-        return list.contains( new Page( address ) );
+        this.listName = listName;
+        this.cart = cart;
     }
 
-    public Page head()
+    public int head()
     {
         return list.getFirst();
-    }
-
-    public void setReferenced( int address )
-    {
-        list.get( list.indexOf( new Page( address ) ) ).referenced = true;
     }
 
     public int size()
@@ -47,31 +45,32 @@ class SearchableList
 
     public void append( int address )
     {
-        list.addLast( new Page( address ) );
+        list.addLast( address );
+        cart.allPages[address].inList = listName;
     }
 
-    public void append( Page page )
+    public int removeHead()
     {
-        list.addLast( page );
-    }
-
-    public Page removeHead()
-    {
-        return list.removeFirst();
+        Integer address = list.removeFirst();
+        cart.allPages[address].inList = Cart.CacheList.none;
+        return address;
     }
 
     public void removeLast()
     {
-        list.removeLast();
+        Integer address = list.removeLast();
+        cart.allPages[address].inList = Cart.CacheList.none;
     }
 
-    public Page remove( int address )
+    public void remove( int address )
     {
-        return list.remove( list.indexOf( new Page( address ) ) );
+        list.removeFirstOccurrence( address );
+        cart.allPages[address].inList = Cart.CacheList.none;
     }
 
-    public void insertHead( Page page )
+    public void insertHead( int address )
     {
-        list.add( 0, page );
+        list.add( 0, address );
+        cart.allPages[address].inList = listName;
     }
 }
