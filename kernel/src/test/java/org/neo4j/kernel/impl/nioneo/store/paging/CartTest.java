@@ -37,7 +37,7 @@ public class CartTest
         // given
         StorageSpy storage = new StorageSpy();
         int capacity = 10;
-        Cart cart = new Cart( storage, capacity );
+        Cart cart = new Cart( storage, capacity, capacity * 2 );
 
         // when
         for ( int i = 0; i < capacity * 2; i++ )
@@ -59,7 +59,7 @@ public class CartTest
         // given
         StorageSpy storage = new StorageSpy();
         int capacity = 10;
-        Cart cart = new Cart( storage, capacity );
+        Cart cart = new Cart( storage, capacity, capacity * 2 );
 
         // when
         for ( int i = 0; i < capacity * 2; i++ )

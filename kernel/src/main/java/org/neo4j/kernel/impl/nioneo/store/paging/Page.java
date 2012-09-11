@@ -21,25 +21,7 @@ package org.neo4j.kernel.impl.nioneo.store.paging;
 
 class Page
 {
-    int address;
+    Cart.CacheList inList = Cart.CacheList.none;
     boolean referenced = false;
     FilterBit filter = FilterBit.S;
-
-    Page( int address )
-    {
-        this.address = address;
-    }
-
-    @SuppressWarnings("EqualsWhichDoesntCheckParameterClass")
-    @Override
-    public boolean equals( Object o )
-    {
-        return ((Page) o).address == address;
-    }
-
-    @Override
-    public int hashCode()
-    {
-        return address;
-    }
 }
