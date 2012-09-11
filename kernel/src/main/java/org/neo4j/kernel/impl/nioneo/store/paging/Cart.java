@@ -28,10 +28,10 @@ public class Cart
     private int q = 0;
     private int nS = 0;
     private int nL = 0;
-    private SearchableList t1 = new SearchableList( CacheList.T1, this );
-    private SearchableList b1 = new SearchableList( CacheList.B1, this );
-    private SearchableList t2 = new SearchableList( CacheList.T2, this );
-    private SearchableList b2 = new SearchableList( CacheList.B2, this );
+    private CachedPageList recencyCache = new CachedPageList();
+    private CachedPageList recencyHistory = new CachedPageList();
+    private CachedPageList frequencyCache = new CachedPageList();
+    private CachedPageList frequencyHistory = new CachedPageList();
     Page[] allPages;
 
     public Cart( Storage storage, int capacity, int maxAddress )
@@ -39,66 +39,64 @@ public class Cart
         this.storage = storage;
         this.capacity = capacity;
         allPages = new Page[maxAddress];
-        for ( int i = 0; i < maxAddress; i++ )
+        for ( int address = 0; address < maxAddress; address++ )
         {
-            allPages[i] = new Page();
+            allPages[address] = new Page( address );
         }
     }
 
     public void acquire( int address )
     {
         Page page = allPages[address];
-        if ( page.inList == CacheList.T1 || page.inList == CacheList.T2 )
+        if ( page.currentList == recencyCache || page.currentList == frequencyCache )
         {
             page.referenced = true;
             storage.hit( address );
             return; // hit
         }
 
-        if ( t1.size() + t2.size() == capacity )
+        if ( recencyCache.size() + frequencyCache.size() == capacity )
         {
             // cache full
             replace();
 
             // history replace
-            if ( page.inList != CacheList.B1 && page.inList != CacheList.B2
-                    && b1.size() + b2.size() == capacity + 1 )
+            if ( page.currentList != recencyHistory && page.currentList != frequencyHistory
+                    && recencyHistory.size() + frequencyHistory.size() == capacity + 1 )
             {
-                if ( b1.size() > max( 0, q ) || b2.size() == 0 )
+                if ( recencyHistory.size() > max( 0, q ) || frequencyHistory.size() == 0 )
                 {
-                    b1.removeLast();
+                    recencyHistory.removeHead();
                 }
                 else
                 {
-                    b2.removeLast();
+                    frequencyHistory.removeHead();
                 }
             }
         }
 
-        if ( page.inList == CacheList.B1 )
+        if ( page.currentList == recencyHistory )
         {
-            p = min( p + max( 1, nS / b1.size() ), capacity );
-            b1.remove( address );
-            t1.append( address );
+            p = min( p + max( 1, nS / recencyHistory.size() ), capacity );
+            page.moveToTailOf( recencyCache );
             page.referenced = false;
             page.filter = FilterBit.L;
             nL++;
         }
-        else if ( page.inList == CacheList.B2 )
+        else if ( page.currentList == frequencyHistory )
         {
-            p = max( p - max( 1, nL / b2.size() ), 0 );
-            b2.remove( address );
-            t1.append( address );
+            p = max( p - max( 1, nL / frequencyHistory.size() ), 0 );
+            page.moveToTailOf( recencyCache );
             page.referenced = false;
             nL++;
-            if ( t2.size() + b2.size() + t1.size() - nS >= capacity )
+            if ( frequencyCache.size() + frequencyHistory.size() + recencyCache.size() - nS >= capacity )
             {
-                q = min( q + 1, 2 * capacity - t1.size() );
+                q = min( q + 1, 2 * capacity - recencyCache.size() );
             }
         }
         else
         {
-            t1.append( address );
+            page.moveToTailOf( recencyCache );
             nS++;
         }
 
@@ -107,26 +105,27 @@ public class Cart
 
     private void replace()
     {
-        while ( t2.size() > 0 && allPages[t2.head()].referenced )
+        while ( frequencyCache.size() > 0 && frequencyCache.head.referenced )
         {
-            int address = t2.removeHead();
-            allPages[address].referenced = false;
-            t1.append( address );
-            if ( t2.size() + b2.size() + b1.size() - nS >= capacity )
+            Page page = frequencyCache.head;
+            page.referenced = false;
+            page.moveToTailOf( recencyCache );
+
+            if ( frequencyCache.size() + frequencyHistory.size() + recencyHistory.size() - nS >= capacity )
             {
-                q = min( q + 1, 2 * capacity - t1.size() );
+                q = min( q + 1, 2 * capacity - recencyCache.size() );
             }
         }
 
-        while ( t1.size() > 0 && (allPages[t1.head()].filter == FilterBit.L || allPages[t1.head()].referenced) )
+        while ( recencyCache.size() > 0 && (recencyCache.head.filter == FilterBit.L || recencyCache.head.referenced) )
         {
-            if ( allPages[t1.head()].referenced )
+            if ( recencyCache.head.referenced )
             {
-                int address = t1.removeHead();
-                Page page = allPages[address];
+                Page page = recencyCache.head;
                 page.referenced = false;
-                t1.append( address );
-                if ( t1.size() > min( p + 1, b1.size() ) && page.filter == FilterBit.S )
+                page.moveToTailOf( recencyCache );
+
+                if ( recencyCache.size() > min( p + 1, recencyHistory.size() ) && page.filter == FilterBit.S )
                 {
                     page.filter = FilterBit.L;
                     nS--;
@@ -135,27 +134,25 @@ public class Cart
             }
             else
             {
-                int address = t1.removeHead();
-                allPages[address].referenced = false;
-                t2.append( address );
-                q = max( q - 1, capacity - t1.size() );
+                Page page = recencyCache.head;
+                page.referenced = false;
+                page.moveToTailOf( frequencyCache );
+
+                q = max( q - 1, capacity - recencyCache.size() );
             }
         }
 
-        if ( t1.size() >= max( 1, p ) )
+        if ( recencyCache.size() >= max( 1, p ) )
         {
-            int address = t1.removeHead();
-            storage.evict( address );
-            b1.insertHead( address );
-            nS--;
+            storage.evict( recencyCache.head.address );
+            recencyCache.head.moveToTailOf( recencyHistory );
         }
         else
         {
-            int address = t2.removeHead();
-            storage.evict( address );
-            b2.insertHead( address );
-            nS--;
+            storage.evict( frequencyCache.head.address );
+            frequencyCache.head.moveToTailOf( frequencyHistory );
         }
+        nS--;
     }
 
     private static int min( int i1, int i2 )
@@ -175,10 +172,5 @@ public class Cart
         void load( int address );
 
         void evict( int address );
-    }
-
-    enum CacheList
-    {
-        none, T1, T2, B1, B2
     }
 }

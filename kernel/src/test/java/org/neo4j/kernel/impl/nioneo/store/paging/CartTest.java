@@ -33,7 +33,6 @@ import org.junit.Test;
 
 public class CartTest
 {
-
     @Test
     public void linearScanWithSingleHitPerWindowLeadsToFifoEviction() throws Exception
     {
