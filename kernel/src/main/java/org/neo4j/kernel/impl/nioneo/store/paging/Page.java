@@ -19,10 +19,8 @@
  */
 package org.neo4j.kernel.impl.nioneo.store.paging;
 
-abstract class Page<T>
+public abstract class Page<T>
 {
-    final int address;
-
     boolean referenced = false;
     TemporalUtility utility = TemporalUtility.UNKNOWN;
 
@@ -30,11 +28,6 @@ abstract class Page<T>
     Page prevPage;
     Page nextPage;
     T payload;
-
-    Page( int address )
-    {
-        this.address = address;
-    }
 
     Page moveToTailOf( CachedPageList targetList )
     {
@@ -58,18 +51,21 @@ abstract class Page<T>
             }
             currentList.decrementSize();
         }
-        prevPage = targetList.tail;
-        if ( prevPage != null )
+        if ( targetList != null )
         {
-            prevPage.nextPage = this;
+            prevPage = targetList.tail;
+            if ( prevPage != null )
+            {
+                prevPage.nextPage = this;
+            }
+            nextPage = null;
+            targetList.tail = this;
+            if ( targetList.head == null )
+            {
+                targetList.head = this;
+            }
+            targetList.incrementSize();
         }
-        nextPage = null;
-        targetList.tail = this;
-        if ( targetList.head == null )
-        {
-            targetList.head = this;
-        }
-        targetList.incrementSize();
         this.currentList = targetList;
 
         return this;
@@ -94,12 +90,27 @@ abstract class Page<T>
         return this;
     }
 
-    protected abstract void evict();
+    final void evict()
+    {
+        try
+        {
+            if ( payload != null )
+            {
+                evict( payload );
+            }
+        }
+        finally
+        {
+            payload = null;
+        }
+    }
+
+    protected abstract void evict( T payload );
 
     @Override
     public String toString()
     {
-        return String.format( "Page{address=%d, inAList=%b}", address, currentList != null );
+        return String.format( "Page{payload=%s, inAList=%b}", payload, currentList != null );
     }
 
     protected abstract void hit();

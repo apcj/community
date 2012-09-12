@@ -141,7 +141,26 @@ public class CartTest
         assertTrue( storage.rndMiss * 2 <= (storage.rndMiss + storage.rndHit) * 1.05 );
     }
 
-    private static class StorageSpy implements Cart.Storage<Integer>
+    @Test
+    public void shouldReloadAfterForcedEviction() throws Exception
+    {
+        // given
+        int capacity = 10;
+        StorageSpy storage = new StorageSpy( capacity * 2 );
+        Cart cart = new Cart( capacity );
+
+        // when
+        cart.acquire( storage.page( 0 ), storage );
+        cart.forceEvict( storage.page( 0 ) );
+        cart.acquire( storage.page( 0 ), storage );
+
+        // then
+        assertArrayEquals( new String[]{
+                "L0", "E0", "L0"
+        }, storage.events.toArray() );
+    }
+
+    private static class StorageSpy implements PageReplacementStrategy.Storage<Integer, StorageSpy.SpyPage>
     {
         SpyPage[] pages;
 
@@ -163,7 +182,7 @@ public class CartTest
 
 
         @Override
-        public Integer load( Page<Integer> page )
+        public Integer load( StorageSpy.SpyPage page )
         {
             events.add( "L" + page.address );
             loadCount++;
@@ -178,20 +197,22 @@ public class CartTest
             return page.address;
         }
 
-        public Page<Integer> page( int address )
+        public SpyPage page( int address )
         {
             return pages[address];
         }
 
-        private class SpyPage extends Page<Integer>
+        class SpyPage extends Page<Integer>
         {
+            private final int address;
+
             public SpyPage( int address )
             {
-                super( address );
+                this.address = address;
             }
 
             @Override
-            protected void evict()
+            protected void evict( Integer address )
             {
                 events.add( "E" + address );
             }

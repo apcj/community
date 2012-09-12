@@ -44,12 +44,15 @@ import org.neo4j.kernel.DefaultLastCommittedTxIdSetter;
 import org.neo4j.kernel.DefaultTxHook;
 import org.neo4j.kernel.configuration.Config;
 import org.neo4j.kernel.configuration.ConfigurationDefaults;
+import org.neo4j.kernel.impl.nioneo.store.windowpool.ScanResistantWindowPoolFactory;
+import org.neo4j.kernel.impl.nioneo.store.windowpool.WindowPoolFactory;
 import org.neo4j.kernel.impl.util.StringLogger;
 import org.neo4j.test.TargetDirectory;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
-        TestRandomAccessMemoryMapping.MissDrivenRemap.class
+        TestRandomAccessMemoryMapping.MissDrivenRemap.class,
+        TestRandomAccessMemoryMapping.ScanResistant.class
 })
 @Ignore("to be replaced with more fine grained test")
 public abstract class TestRandomAccessMemoryMapping
@@ -88,6 +91,16 @@ public abstract class TestRandomAccessMemoryMapping
         WindowPoolFactory windowPoolFactory()
         {
             return new DefaultWindowPoolFactory();
+        }
+    }
+
+    @RunWith(JUnit4.class)
+    public static class ScanResistant extends TestRandomAccessMemoryMapping
+    {
+        @Override
+        WindowPoolFactory windowPoolFactory()
+        {
+            return new ScanResistantWindowPoolFactory();
         }
     }
 
