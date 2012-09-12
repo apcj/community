@@ -21,11 +21,11 @@ package org.neo4j.kernel.impl.nioneo.store;
 
 import java.nio.channels.FileChannel;
 
+import org.neo4j.kernel.configuration.Config;
 import org.neo4j.kernel.impl.util.StringLogger;
 
 public interface WindowPoolFactory
 {
-    WindowPool create( String storeName, int blockSize,
-                       FileChannel fileChannel, long mappedMem,
-                       boolean useMemoryMappedBuffers, boolean readOnly, StringLogger log );
+    WindowPool create( String storageFileName, int recordSize, FileChannel fileChannel,
+                       Config configuration, StringLogger log );
 }

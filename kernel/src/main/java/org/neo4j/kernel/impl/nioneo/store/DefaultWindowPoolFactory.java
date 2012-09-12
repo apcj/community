@@ -20,16 +20,87 @@
 package org.neo4j.kernel.impl.nioneo.store;
 
 import java.nio.channels.FileChannel;
+import java.util.Map;
+import java.util.logging.Logger;
 
+import org.neo4j.kernel.configuration.Config;
 import org.neo4j.kernel.impl.util.StringLogger;
 
 public class DefaultWindowPoolFactory implements WindowPoolFactory
 {
+    @Deprecated
+    private static Logger logger = Logger.getLogger( DefaultWindowPoolFactory.class.getName() );
+
     @Override
-    public WindowPool create( String storeName, int blockSize, FileChannel fileChannel, long mappedMem, boolean
-            useMemoryMappedBuffers, boolean readOnly, StringLogger log )
+    public WindowPool create( String storageFileName, int recordSize, FileChannel fileChannel, Config configuration,
+                              StringLogger log )
     {
-        return new PersistenceWindowPool( storeName, blockSize, fileChannel, mappedMem, useMemoryMappedBuffers,
-                readOnly, log );
+
+        return new PersistenceWindowPool( storageFileName, recordSize, fileChannel,
+                calculateMappedMemory( configuration.getParams(), storageFileName ),
+                configuration.get( CommonAbstractStore.Configuration.use_memory_mapped_buffers ),
+                isReadOnly( configuration ) && !isBackupSlave( configuration ), log );
     }
+
+    private boolean isBackupSlave( Config configuration )
+    {
+        return configuration.get( CommonAbstractStore.Configuration.backup_slave );
+    }
+
+    private boolean isReadOnly( Config configuration )
+    {
+        return configuration.get( CommonAbstractStore.Configuration.read_only );
+    }
+
+    /**
+     * Returns memory assigned for
+     * {@link MappedPersistenceWindow memory mapped windows} in bytes. The
+     * configuration map passed in one constructor is checked for an entry with
+     * this stores name.
+     *
+     * @param config          Map of configuration parameters
+     * @param storageFileName Name of the file on disk
+     * @param log
+     * @return The number of bytes memory mapped windows this store has
+     */
+    // TODO: This should use the type-safe config API, rather than this magic stuff
+    private long calculateMappedMemory( Map<?, ?> config, String storageFileName )
+    {
+        String convertSlash = storageFileName.replace( '\\', '/' );
+        String realName = convertSlash.substring( convertSlash
+                .lastIndexOf( '/' ) + 1 );
+        String mem = (String) config.get( realName + ".mapped_memory" );
+        if ( mem != null )
+        {
+            long multiplier = 1;
+            mem = mem.trim().toLowerCase();
+            if ( mem.endsWith( "m" ) )
+            {
+                multiplier = 1024 * 1024;
+                mem = mem.substring( 0, mem.length() - 1 );
+            }
+            else if ( mem.endsWith( "k" ) )
+            {
+                multiplier = 1024;
+                mem = mem.substring( 0, mem.length() - 1 );
+            }
+            else if ( mem.endsWith( "g" ) )
+            {
+                multiplier = 1024 * 1024 * 1024;
+                mem = mem.substring( 0, mem.length() - 1 );
+            }
+            try
+            {
+                return Integer.parseInt( mem ) * multiplier;
+            }
+            catch ( NumberFormatException e )
+            {
+                logger.info( "Unable to parse mapped memory[" + mem
+                        + "] string for " + storageFileName );
+            }
+        }
+
+        return 0;
+    }
+
 }
