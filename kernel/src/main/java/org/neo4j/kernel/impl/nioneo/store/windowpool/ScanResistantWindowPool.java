@@ -38,7 +38,10 @@ public class ScanResistantWindowPool implements WindowPool,
     private final PageReplacementStrategy replacementStrategy;
     private final int bytesPerRecord;
     private final int recordsPerPage;
-    WindowPage[] pages = new WindowPage[0];
+    private WindowPage[] pages = new WindowPage[0];
+
+    private int acquireCount = 0;
+    private int mapCount = 0;
 
     public ScanResistantWindowPool( String storeFileName, int bytesPerRecord, int targetBytesPerPage,
                                     FileMapper fileMapper, PageReplacementStrategy replacementStrategy )
@@ -104,6 +107,7 @@ public class ScanResistantWindowPool implements WindowPool,
         }
         try
         {
+            acquireCount++;
             return replacementStrategy.acquire( page( position ), this );
         }
         catch ( PageLoadFailureException e )
@@ -130,14 +134,15 @@ public class ScanResistantWindowPool implements WindowPool,
     {
         for ( WindowPage page : pages )
         {
-            replacementStrategy.forceEvict(page);
+            replacementStrategy.forceEvict( page );
         }
     }
 
     @Override
     public WindowPoolStats getStats()
     {
-        return null;
+        return new WindowPoolStats( storeFileName, 0, 0, pages.length,
+                bytesPerRecord * recordsPerPage, acquireCount - mapCount, mapCount, 0, 0, 0, 0, 0 );
     }
 
     @Override
@@ -145,6 +150,7 @@ public class ScanResistantWindowPool implements WindowPool,
     {
         try
         {
+            mapCount++;
             return fileMapper.mapWindow( page.firstRecord, recordsPerPage, bytesPerRecord );
         }
         catch ( IOException e )
