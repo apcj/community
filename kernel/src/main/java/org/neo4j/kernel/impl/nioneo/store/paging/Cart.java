@@ -19,7 +19,7 @@
  */
 package org.neo4j.kernel.impl.nioneo.store.paging;
 
-public class Cart implements TemporalUtilityCounter
+public class Cart implements PageReplacementStrategy, TemporalUtilityCounter
 {
     private final int capacity;
 
@@ -38,7 +38,9 @@ public class Cart implements TemporalUtilityCounter
         this.capacity = capacity;
     }
 
-    public <T> T acquire( Page<T> page, Storage<T> storage )
+    @Override
+    public <PAYLOAD,PAGE extends Page<PAYLOAD>> PAYLOAD acquire( PAGE page, Storage<PAYLOAD,PAGE> storage )
+            throws PageLoadFailureException
     {
         if ( page.currentList == recencyCache || page.currentList == frequencyCache )
         {
@@ -87,6 +89,12 @@ public class Cart implements TemporalUtilityCounter
         }
 
         return page.payload = storage.load( page );
+    }
+
+    @Override
+    public <PAYLOAD> void forceEvict( Page<PAYLOAD> page )
+    {
+        page.clearReference().setUtility( this, TemporalUtility.UNKNOWN ).moveToTailOf( null ).evict();
     }
 
     private void replace()
@@ -170,8 +178,4 @@ public class Cart implements TemporalUtilityCounter
         }
     }
 
-    public interface Storage<T>
-    {
-        T load( Page<T> page );
-    }
 }

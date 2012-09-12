@@ -17,7 +17,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.neo4j.kernel.impl.nioneo.store;
+package org.neo4j.kernel.impl.nioneo.store.windowpool;
+
+import org.neo4j.kernel.impl.nioneo.store.OperationType;
+import org.neo4j.kernel.impl.nioneo.store.PersistenceWindow;
+import org.neo4j.kernel.impl.nioneo.store.WindowPoolStats;
 
 public interface WindowPool
 {

@@ -24,6 +24,8 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import org.neo4j.kernel.configuration.Config;
+import org.neo4j.kernel.impl.nioneo.store.windowpool.WindowPool;
+import org.neo4j.kernel.impl.nioneo.store.windowpool.WindowPoolFactory;
 import org.neo4j.kernel.impl.util.StringLogger;
 
 public class DefaultWindowPoolFactory implements WindowPoolFactory
