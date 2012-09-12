@@ -19,7 +19,7 @@
  */
 package org.neo4j.kernel.impl.nioneo.store.paging;
 
-class Page
+abstract class Page<T>
 {
     final int address;
 
@@ -29,6 +29,7 @@ class Page
     CachedPageList currentList = null;
     Page prevPage;
     Page nextPage;
+    T payload;
 
     Page( int address )
     {
@@ -93,9 +94,13 @@ class Page
         return this;
     }
 
+    protected abstract void evict();
+
     @Override
     public String toString()
     {
         return String.format( "Page{address=%d, inAList=%b}", address, currentList != null );
     }
+
+    protected abstract void hit();
 }

@@ -21,7 +21,6 @@ package org.neo4j.kernel.impl.nioneo.store.paging;
 
 public class Cart implements TemporalUtilityCounter
 {
-    private final Storage storage;
     private final int capacity;
 
     private int p = 0;
@@ -33,27 +32,19 @@ public class Cart implements TemporalUtilityCounter
     private CachedPageList recencyHistory = new CachedPageList();
     private CachedPageList frequencyCache = new CachedPageList();
     private CachedPageList frequencyHistory = new CachedPageList();
-    Page[] allPages;
 
-    public Cart( Storage storage, int capacity, int maxAddress )
+    public Cart( int capacity )
     {
-        this.storage = storage;
         this.capacity = capacity;
-        allPages = new Page[maxAddress];
-        for ( int address = 0; address < maxAddress; address++ )
-        {
-            allPages[address] = new Page( address );
-        }
     }
 
-    public void acquire( int address )
+    public <T> T acquire( Page<T> page, Storage<T> storage )
     {
-        Page page = allPages[address];
         if ( page.currentList == recencyCache || page.currentList == frequencyCache )
         {
             page.setReferenced();
-            storage.hit( address );
-            return; // hit
+            page.hit();
+            return page.payload;
         }
 
         if ( recencyCache.size() + frequencyCache.size() == capacity )
@@ -95,7 +86,7 @@ public class Cart implements TemporalUtilityCounter
             page.moveToTailOf( recencyCache ).setUtility( this, TemporalUtility.SHORT_TERM );
         }
 
-        storage.load( address );
+        return page.payload = storage.load( page );
     }
 
     private void replace()
@@ -131,12 +122,12 @@ public class Cart implements TemporalUtilityCounter
 
         if ( recencyCache.size() >= max( 1, p ) )
         {
-            storage.evict( recencyCache.head.address );
+            recencyCache.head.evict();
             recencyCache.head.moveToTailOf( recencyHistory ).setUtility( this, TemporalUtility.LONG_TERM );
         }
         else
         {
-            storage.evict( frequencyCache.head.address );
+            frequencyCache.head.evict();
             frequencyCache.head.moveToTailOf( frequencyHistory ).setUtility( this, TemporalUtility.SHORT_TERM );
         }
     }
@@ -179,12 +170,8 @@ public class Cart implements TemporalUtilityCounter
         }
     }
 
-    public interface Storage
+    public interface Storage<T>
     {
-        void hit( int address );
-
-        void load( int address );
-
-        void evict( int address );
+        T load( Page<T> page );
     }
 }

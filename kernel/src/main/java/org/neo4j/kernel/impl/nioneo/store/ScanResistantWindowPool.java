@@ -12,23 +12,25 @@ public class ScanResistantWindowPool implements WindowPool
     private final FileChannel fileChannel;
     private final int bytesPerRecord;
     private final int recordsPerPage;
+//    Page[] pages;
+//    Cart cart;
 
-    public ScanResistantWindowPool( String storeFileName, int bytesPerRecord, FileChannel fileChannel )
+    public ScanResistantWindowPool( String storeFileName, int bytesPerRecord, int targetBytesPerPage, FileChannel fileChannel )
     {
         this.storeFileName = storeFileName;
         this.bytesPerRecord = bytesPerRecord;
         this.fileChannel = fileChannel;
-        this.recordsPerPage = calculateNumberOfRecordsPerPage( bytesPerRecord );
+        this.recordsPerPage = calculateNumberOfRecordsPerPage( bytesPerRecord, targetBytesPerPage );
     }
 
-    static int calculateNumberOfRecordsPerPage( int bytesPerRecord )
+    private static int calculateNumberOfRecordsPerPage( int bytesPerRecord, int targetBytesPerPage )
     {
-        if ( bytesPerRecord <= 0 || bytesPerRecord > 4096 )
+        if ( bytesPerRecord <= 0 || bytesPerRecord > targetBytesPerPage )
         {
-            throw new IllegalArgumentException( String.format( "number of bytes per record [%s], " +
-                    "is not in the valid range [1-4096]", bytesPerRecord ) );
+            throw new IllegalArgumentException( String.format( "number of bytes per record [%d] " +
+                    "is not in the valid range [1-%d]", bytesPerRecord, targetBytesPerPage ) );
         }
-        return 4096 >> Integer.numberOfTrailingZeros( bytesPerRecord );
+        return targetBytesPerPage / bytesPerRecord;
     }
 
     @Override
@@ -41,6 +43,7 @@ public class ScanResistantWindowPool implements WindowPool
         try
         {
             int pageNumber = (int) position / recordsPerPage;
+//            cart.acquire( pages[pageNumber], this );
             return new MappedWindow( recordsPerPage, bytesPerRecord, pageNumber * recordsPerPage,
                     fileChannel.map( READ_ONLY, pageNumber * recordsPerPage * bytesPerRecord,
                             recordsPerPage * bytesPerRecord ) );

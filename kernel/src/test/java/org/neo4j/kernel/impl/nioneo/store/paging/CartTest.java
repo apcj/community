@@ -37,14 +37,14 @@ public class CartTest
     public void linearScanWithSingleHitPerWindowLeadsToFifoEviction() throws Exception
     {
         // given
-        StorageSpy storage = new StorageSpy();
         int capacity = 10;
-        Cart cart = new Cart( storage, capacity, capacity * 2 );
+        StorageSpy storage = new StorageSpy( capacity * 2 );
+        Cart cart = new Cart( capacity );
 
         // when
         for ( int i = 0; i < capacity * 2; i++ )
         {
-            cart.acquire( i );
+            cart.acquire( storage.page( i ), storage );
         }
 
         // then
@@ -59,14 +59,14 @@ public class CartTest
     public void reverseLinearScanWithSingleHitPerWindowLeadsToFifoEviction() throws Exception
     {
         // given
-        StorageSpy storage = new StorageSpy();
         int capacity = 10;
-        Cart cart = new Cart( storage, capacity, capacity * 2 );
+        StorageSpy storage = new StorageSpy( capacity * 2 );
+        Cart cart = new Cart( capacity );
 
         // when
         for ( int i = capacity * 2 - 1; i >= 0; i-- )
         {
-            cart.acquire( i );
+            cart.acquire( storage.page( i ), storage );
         }
 
         // then
@@ -82,18 +82,18 @@ public class CartTest
     public void frequentlyAccessedPagesDoNotGetEvicted() throws Exception
     {
         // given
-        StorageSpy storage = new StorageSpy();
         int capacity = 10;
-        Cart cart = new Cart( storage, capacity, capacity * 2 );
+        StorageSpy storage = new StorageSpy( capacity * 2 );
+        Cart cart = new Cart( capacity );
 
         // when
         for ( int i = 0; i < capacity * 2; i++ )
         {
             // even number pages accessed more frequently
-            cart.acquire( (i / 2) * 2 );
+            cart.acquire( storage.page( (i / 2) * 2 ), storage );
 
             // background access of even and odd numbered pages
-            cart.acquire( i );
+            cart.acquire( storage.page( i ), storage );
         }
 
         // then
@@ -113,11 +113,11 @@ public class CartTest
     public void linearPlusRandom() throws Exception
     {
         // given
-        StorageSpy storage = new StorageSpy();
         int capacity = 10;
+        StorageSpy storage = new StorageSpy( capacity * 2 );
         int randoms = 4;
         int pageSize = 10;
-        Cart cart = new Cart( storage, capacity, capacity * 2 );
+        Cart cart = new Cart( capacity );
 
         // when
         Random random = new Random();
@@ -127,11 +127,11 @@ public class CartTest
             for ( int j = 0; j < pageSize; j++ )
             {
                 storage.linear = true;
-                cart.acquire( i );
+                cart.acquire( storage.page( i ), storage );
                 storage.linear = false;
                 for ( int k = 0; k < randoms; k++ )
                 {
-                    cart.acquire( random.nextInt( capacity * 2 ) );
+                    cart.acquire( storage.page( random.nextInt( capacity * 2 ) ), storage );
                 }
             }
         }
@@ -141,8 +141,19 @@ public class CartTest
         assertTrue( storage.rndMiss * 2 <= (storage.rndMiss + storage.rndHit) * 1.05 );
     }
 
-    private static class StorageSpy implements Cart.Storage
+    private static class StorageSpy implements Cart.Storage<Integer>
     {
+        SpyPage[] pages;
+
+        StorageSpy( int pageCount )
+        {
+            pages = new SpyPage[pageCount];
+            for ( int i = 0; i < pages.length; i++ )
+            {
+                pages[i] = new SpyPage( i );
+            }
+        }
+
         List<String> events = new ArrayList<String>();
 
         int hitCount, loadCount;
@@ -150,24 +161,11 @@ public class CartTest
         int linHit, linMiss;
         int rndHit, rndMiss;
 
-        @Override
-        public void hit( int address )
-        {
-            hitCount++;
-            if ( linear )
-            {
-                linHit++;
-            }
-            else
-            {
-                rndHit++;
-            }
-        }
 
         @Override
-        public void load( int address )
+        public Integer load( Page<Integer> page )
         {
-            events.add( "L" + address );
+            events.add( "L" + page.address );
             loadCount++;
             if ( linear )
             {
@@ -177,12 +175,40 @@ public class CartTest
             {
                 rndMiss++;
             }
+            return page.address;
         }
 
-        @Override
-        public void evict( int address )
+        public Page<Integer> page( int address )
         {
-            events.add( "E" + address );
+            return pages[address];
+        }
+
+        private class SpyPage extends Page<Integer>
+        {
+            public SpyPage( int address )
+            {
+                super( address );
+            }
+
+            @Override
+            protected void evict()
+            {
+                events.add( "E" + address );
+            }
+
+            @Override
+            protected void hit()
+            {
+                hitCount++;
+                if ( linear )
+                {
+                    linHit++;
+                }
+                else
+                {
+                    rndHit++;
+                }
+            }
         }
     }
 }

@@ -21,9 +21,10 @@ public class ScanResistantWindowPoolTest
     public void shouldMapConsecutiveWindowsWithAppropriateBoundaries() throws Exception
     {
         // given
-        int recordSize = 9; // Not divisible by 2, for simpler math
+        int bytesPerRecord = 9;
+        int targetBytesPerPage = 4096;
         FileChannel fileChannel = mock( FileChannel.class );
-        ScanResistantWindowPool pool = new ScanResistantWindowPool( "storeFileName", recordSize, fileChannel );
+        ScanResistantWindowPool pool = new ScanResistantWindowPool( "storeFileName", bytesPerRecord, targetBytesPerPage, fileChannel );
 
         // when
         PersistenceWindow window0 = pool.acquire( 0, OperationType.READ );
@@ -31,7 +32,7 @@ public class ScanResistantWindowPoolTest
         // then
         assertEquals( 0, window0.position() );
         assertThat( window0.size(), greaterThan( 0 ) );
-        assertEquals( recordSize, window0.getRecordSize() );
+        assertEquals( bytesPerRecord, window0.getRecordSize() );
         verify( fileChannel ).map( eq( FileChannel.MapMode.READ_ONLY ), eq( 0L ), anyLong() );
 
         // when
@@ -42,22 +43,44 @@ public class ScanResistantWindowPoolTest
         assertEquals( window0.getRecordSize(), window1.getRecordSize() );
         assertEquals( window0.size(), window1.position() );
 
-        verify( fileChannel ).map( eq( FileChannel.MapMode.READ_ONLY ), eq( (long) window0.size() * recordSize ), anyLong() );
+        verify( fileChannel ).map( eq( FileChannel.MapMode.READ_ONLY ), eq( (long) window0.size() * bytesPerRecord ), anyLong() );
     }
 
     @Test
-    public void shouldCalculatePageSizeThatIsAMultipleOf4kBytes() throws Exception
+    public void shouldRejectRecordSizeGreaterThanTargetBytesPerPage() throws Exception
     {
         // given
-        int recordSize = 9;
+        int targetBytesPerPage = 4096;
+        int bytesPerRecord = targetBytesPerPage + 1;
 
         // when
-        int recordsPerPage = ScanResistantWindowPool.calculateNumberOfRecordsPerPage( recordSize );
-
+        try
+        {
+            new ScanResistantWindowPool( "storeFileName", bytesPerRecord, targetBytesPerPage,
+                    mock( FileChannel.class ) );
+            fail( "should have thrown exception" );
+        }
         // then
-        assertThat( recordsPerPage, greaterThan( 0 ) );
-        assertEquals( 0, recordsPerPage % 2 );
-        assertEquals( 0, (recordsPerPage * recordSize) % 4096 );
+        catch ( IllegalArgumentException expected )
+        {
+            // expected
+        }
+    }
+
+    @Test
+    public void shouldRejectRecordSizeOfZero() throws Exception
+    {
+        // when
+        try
+        {
+            new ScanResistantWindowPool( "storeFileName", 0, 4096, mock( FileChannel.class ) );
+            fail( "should have thrown exception" );
+        }
+        // then
+        catch ( IllegalArgumentException expected )
+        {
+            // expected
+        }
     }
 
     @Test
@@ -65,7 +88,8 @@ public class ScanResistantWindowPoolTest
     {
         // given
         int recordSize = 9;
-        ScanResistantWindowPool pool = new ScanResistantWindowPool( "storeFileName", recordSize,
+        int targetBytesPerPage = 4096;
+        ScanResistantWindowPool pool = new ScanResistantWindowPool( "storeFileName", recordSize, targetBytesPerPage,
                 mock( FileChannel.class ) );
 
         // when
@@ -98,21 +122,4 @@ public class ScanResistantWindowPoolTest
         };
     }
 
-    private Matcher<Long> lessThanOrEqualTo( final long value )
-    {
-        return new TypeSafeMatcher<Long>()
-        {
-            @Override
-            public boolean matchesSafely( Long item )
-            {
-                return item <= value;
-            }
-
-            @Override
-            public void describeTo( Description description )
-            {
-                description.appendText( "value <= " ).appendValue( value );
-            }
-        };
-    }
 }
