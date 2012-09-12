@@ -225,8 +225,8 @@ public abstract class CommonAbstractStore
         loadIdGenerator();
 
         this.windowPool = windowPoolFactory.create( getStorageFileName(),
-            getEffectiveRecordSize(), getFileChannel(), calculateMappedMemory(configuration.getParams(), storageFileName ),
-            configuration.get( Configuration.use_memory_mapped_buffers ), isReadOnly() && !isBackupSlave(), stringLogger );
+            getEffectiveRecordSize(), getFileChannel(), configuration,
+                stringLogger );
     }
 
     protected abstract int getEffectiveRecordSize();
@@ -348,24 +348,6 @@ public abstract class CommonAbstractStore
     }
 
     /**
-     * Sets the {@link PersistenceWindowPool} for this store to use. Normally
-     * this is set in the {@link #loadStorage()} method. This method must be
-     * invoked with a valid "pool" before any of the
-     * {@link #acquireWindow(long, OperationType)}
-     * {@link #releaseWindow(PersistenceWindow)}
-     * {@link #flushAll()}
-     * {@link #close()}
-     * methods are invoked.
-     *
-     * @param pool
-     *            The window pool this store should use
-     */
-    protected void setWindowPool( WindowPool pool )
-    {
-        this.windowPool = pool;
-    }
-
-    /**
      * Returns the next id for this store's {@link IdGenerator}.
      *
      * @return The next free id
@@ -414,56 +396,6 @@ public abstract class CommonAbstractStore
         {
             idGenerator.setHighId( highId );
         }
-    }
-
-    /**
-     * Returns memory assigned for
-     * {@link MappedPersistenceWindow memory mapped windows} in bytes. The
-     * configuration map passed in one constructor is checked for an entry with
-     * this stores name.
-     *
-     * @return The number of bytes memory mapped windows this store has
-     * @param config Map of configuration parameters
-     * @param storageFileName Name of the file on disk
-     */
-    // TODO: This should use the type-safe config API, rather than this magic stuff
-    private long calculateMappedMemory( Map<?, ?> config, String storageFileName )
-    {
-        String convertSlash = storageFileName.replace( '\\', '/' );
-        String realName = convertSlash.substring( convertSlash
-            .lastIndexOf( '/' ) + 1 );
-        String mem = (String) config.get( realName + ".mapped_memory" );
-        if ( mem != null )
-        {
-            long multiplier = 1;
-            mem = mem.trim().toLowerCase();
-            if ( mem.endsWith( "m" ) )
-            {
-                multiplier = 1024 * 1024;
-                mem = mem.substring( 0, mem.length() - 1 );
-            }
-            else if ( mem.endsWith( "k" ) )
-            {
-                multiplier = 1024;
-                mem = mem.substring( 0, mem.length() - 1 );
-            }
-            else if ( mem.endsWith( "g" ) )
-            {
-                multiplier = 1024*1024*1024;
-                mem = mem.substring( 0, mem.length() - 1 );
-            }
-            try
-            {
-                return Integer.parseInt( mem ) * multiplier;
-            }
-            catch ( NumberFormatException e )
-            {
-                logger.info( "Unable to parse mapped memory[" + mem
-                    + "] string for " + storageFileName );
-            }
-        }
-
-        return 0;
     }
 
     /**

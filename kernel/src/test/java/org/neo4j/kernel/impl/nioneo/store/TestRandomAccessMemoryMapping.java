@@ -49,8 +49,7 @@ import org.neo4j.test.TargetDirectory;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
-        TestRandomAccessMemoryMapping.MissDrivenRemap.class,
-        TestRandomAccessMemoryMapping.AlwaysRemap.class
+        TestRandomAccessMemoryMapping.MissDrivenRemap.class
 })
 @Ignore("to be replaced with more fine grained test")
 public abstract class TestRandomAccessMemoryMapping
@@ -89,16 +88,6 @@ public abstract class TestRandomAccessMemoryMapping
         WindowPoolFactory windowPoolFactory()
         {
             return new DefaultWindowPoolFactory();
-        }
-    }
-
-    @RunWith(JUnit4.class)
-    public static class AlwaysRemap extends TestRandomAccessMemoryMapping
-    {
-        @Override
-        WindowPoolFactory windowPoolFactory()
-        {
-            return new AlwaysRemapWindowPoolFactory();
         }
     }
 
