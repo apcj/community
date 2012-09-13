@@ -19,9 +19,12 @@
  */
 package org.neo4j.kernel.impl.nioneo.store.windowpool;
 
+import static java.lang.String.format;
+
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 
+import org.neo4j.graphdb.factory.GraphDatabaseSettings;
 import org.neo4j.kernel.configuration.Config;
 import org.neo4j.kernel.impl.nioneo.store.UnderlyingStorageException;
 import org.neo4j.kernel.impl.nioneo.store.paging.Cart;
@@ -29,8 +32,36 @@ import org.neo4j.kernel.impl.util.StringLogger;
 
 public class ScanResistantWindowPoolFactory implements WindowPoolFactory
 {
-    private int targetBytesPerPage = 4096;
-    private int pageCapacity = 4096;
+    private final int targetBytesPerPage;
+    private final int pageCapacity;
+
+    public ScanResistantWindowPoolFactory( Config configuration )
+    {
+        this.targetBytesPerPage = pageSize( configuration );
+        this.pageCapacity = mappablePages( configuration, targetBytesPerPage );
+    }
+
+    private static int pageSize( Config configuration )
+    {
+        long pageSize = configuration.get( GraphDatabaseSettings.mapped_memory_page_size );
+        if ( pageSize > Integer.MAX_VALUE )
+        {
+            throw new IllegalArgumentException( format( "configured page size [%d bytes] is too large", pageSize ) );
+        }
+        return (int) pageSize;
+    }
+
+    private static int mappablePages( Config configuration, int targetBytesPerPage )
+    {
+        long bytes = configuration.get( GraphDatabaseSettings.all_stores_total_mapped_memory_size );
+        long pageCount = bytes / targetBytesPerPage;
+        if ( pageCount > Integer.MAX_VALUE )
+        {
+            throw new IllegalArgumentException( format( "configured page size [%d bytes] and mapped memory [%d bytes]" +
+                    " implies too many pages", targetBytesPerPage, bytes ) );
+        }
+        return (int) pageCount;
+    }
 
     @Override
     public WindowPool create( String storageFileName, int recordSize, FileChannel fileChannel,
