@@ -172,7 +172,7 @@ public class TestStore
 
         public static Store createStore( String fileName) throws IOException
         {
-            new StoreFactory(new Config(new ConfigurationDefaults(GraphDatabaseSettings.class ).apply( Collections.<String,String>emptyMap() )), ID_GENERATOR_FACTORY, FILE_SYSTEM, null, StringLogger.DEV_NULL, null).createEmptyStore(fileName, buildTypeDescriptorAndVersion( TYPE_DESCRIPTOR ));
+            new StoreFactory(new Config(new ConfigurationDefaults(GraphDatabaseSettings.class ).apply( Collections.<String,String>emptyMap() )), ID_GENERATOR_FACTORY, new DefaultWindowPoolFactory(), FILE_SYSTEM, null, StringLogger.DEV_NULL, null ).createEmptyStore(fileName, buildTypeDescriptorAndVersion( TYPE_DESCRIPTOR ));
             return new Store( fileName );
         }
 

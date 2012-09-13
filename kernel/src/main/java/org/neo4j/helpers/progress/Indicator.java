@@ -119,6 +119,7 @@ public abstract class Indicator
         public void startProcess( long totalCount )
         {
             out.println( process );
+            out.flush();
         }
 
         @Override

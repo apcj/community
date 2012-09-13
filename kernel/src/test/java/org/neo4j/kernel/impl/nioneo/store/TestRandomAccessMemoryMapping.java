@@ -178,7 +178,7 @@ public abstract class TestRandomAccessMemoryMapping
     {
         DefaultIdGeneratorFactory idGeneratorFactory = new DefaultIdGeneratorFactory();
         StoreFactory storeFactory = new StoreFactory( config, idGeneratorFactory,
-                new DefaultFileSystemAbstraction(),
+                new DefaultWindowPoolFactory(), new DefaultFileSystemAbstraction(),
                 new DefaultLastCommittedTxIdSetter(), StringLogger.SYSTEM, new DefaultTxHook() );
 
         storeFactory.createEmptyStore( fileName, storeFactory.buildTypeDescriptorAndVersion(

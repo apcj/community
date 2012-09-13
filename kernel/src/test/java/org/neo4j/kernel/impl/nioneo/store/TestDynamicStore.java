@@ -118,7 +118,7 @@ public class TestDynamicStore
 
     private void createEmptyStore( String fileName, int blockSize )
     {
-        new StoreFactory(config(), ID_GENERATOR_FACTORY, FILE_SYSTEM, null, StringLogger.SYSTEM, null).createDynamicArrayStore(fileName, blockSize);
+        new StoreFactory(config(), ID_GENERATOR_FACTORY, new DefaultWindowPoolFactory(), FILE_SYSTEM, null, StringLogger.SYSTEM, null ).createDynamicArrayStore(fileName, blockSize);
     }
 
     private DynamicArrayStore newStore()

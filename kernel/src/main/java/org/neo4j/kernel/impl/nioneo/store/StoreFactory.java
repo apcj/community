@@ -56,16 +56,19 @@ public class StoreFactory
 
     private final Config config;
     private final IdGeneratorFactory idGeneratorFactory;
-    private final WindowPoolFactory windowPoolFactory = new DefaultWindowPoolFactory();
+    private final WindowPoolFactory windowPoolFactory;
     private final FileSystemAbstraction fileSystemAbstraction;
     private final LastCommittedTxIdSetter lastCommittedTxIdSetter;
     private final StringLogger stringLogger;
     private final TxHook txHook;
 
-    public StoreFactory(Config config, IdGeneratorFactory idGeneratorFactory, FileSystemAbstraction fileSystemAbstraction, LastCommittedTxIdSetter lastCommittedTxIdSetter, StringLogger stringLogger, TxHook txHook)
+    public StoreFactory( Config config, IdGeneratorFactory idGeneratorFactory, WindowPoolFactory windowPoolFactory,
+                         FileSystemAbstraction fileSystemAbstraction, LastCommittedTxIdSetter lastCommittedTxIdSetter,
+                         StringLogger stringLogger, TxHook txHook )
     {
         this.config = config;
         this.idGeneratorFactory = idGeneratorFactory;
+        this.windowPoolFactory = windowPoolFactory;
         this.fileSystemAbstraction = fileSystemAbstraction;
         this.lastCommittedTxIdSetter = lastCommittedTxIdSetter;
         this.stringLogger = stringLogger;

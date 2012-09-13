@@ -26,7 +26,6 @@ import static org.neo4j.graphdb.factory.GraphDatabaseSettings.mapped_memory_page
 import static org.neo4j.graphdb.factory.GraphDatabaseSettings.nodestore_mapped_memory_size;
 import static org.neo4j.helpers.collection.MapUtil.store;
 import static org.neo4j.helpers.collection.MapUtil.stringMap;
-import static org.neo4j.test.TargetDirectory.testDirForTest;
 
 import java.io.File;
 import java.util.Random;
@@ -34,7 +33,6 @@ import java.util.Random;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
-import org.junit.Rule;
 import org.junit.Test;
 import org.neo4j.graphdb.factory.GraphDatabaseSettings;
 import org.neo4j.kernel.DefaultFileSystemAbstraction;
@@ -119,7 +117,7 @@ public class PageTuningMatrixTest
     {
         DefaultIdGeneratorFactory idGeneratorFactory = new DefaultIdGeneratorFactory();
         StoreFactory storeFactory = new StoreFactory( config, idGeneratorFactory,
-                new DefaultFileSystemAbstraction(),
+                new DefaultWindowPoolFactory(), new DefaultFileSystemAbstraction(),
                 new DefaultLastCommittedTxIdSetter(), StringLogger.SYSTEM, new DefaultTxHook() );
 
         storeFactory.createEmptyStore( fileName, storeFactory.buildTypeDescriptorAndVersion(

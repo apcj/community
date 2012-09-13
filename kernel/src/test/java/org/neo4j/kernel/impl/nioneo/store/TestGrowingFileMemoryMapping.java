@@ -59,7 +59,7 @@ public class TestGrowingFileMemoryMapping
         ) ) );
         DefaultIdGeneratorFactory idGeneratorFactory = new DefaultIdGeneratorFactory();
         StoreFactory storeFactory = new StoreFactory( config, idGeneratorFactory,
-                new DefaultFileSystemAbstraction(),
+                new DefaultWindowPoolFactory(), new DefaultFileSystemAbstraction(),
                 new DefaultLastCommittedTxIdSetter(), StringLogger.SYSTEM, new DefaultTxHook() );
 
         String fileName = new File( storeDir, NeoStore.DEFAULT_NAME + ".nodestore.db" ).getPath();
