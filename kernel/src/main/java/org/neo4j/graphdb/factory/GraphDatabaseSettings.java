@@ -168,6 +168,14 @@ public abstract class GraphDatabaseSettings
     @Description( "Tell Neo4j to use memory mapped buffers for accessing the native storage layer." )
     public static final UseMemoryMappedBuffers use_memory_mapped_buffers = new UseMemoryMappedBuffers();
 
+    @Description( "Target size for pages of mapped memory." )
+    @Default("1M")
+    public static final GraphDatabaseSetting<Long> mapped_memory_page_size = new NumberOfBytesSetting("mapped_memory_page_size");
+
+    @Description( "The size to allocate for a memory mapping pool to be shared between all stores." )
+    @Default("500M")
+    public static final GraphDatabaseSetting<Long> all_stores_total_mapped_memory_size = new NumberOfBytesSetting("all_stores_total_mapped_memory_size");
+
     @Description( "The size to allocate for memory mapping the node store." )
     @Default("20M")
     public static final Setting nodestore_mapped_memory_size = new NumberOfBytesSetting("neostore.nodestore.db.mapped_memory");

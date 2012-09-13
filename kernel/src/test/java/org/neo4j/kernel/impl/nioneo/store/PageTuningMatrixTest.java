@@ -19,29 +19,23 @@
  */
 package org.neo4j.kernel.impl.nioneo.store;
 
-import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 import static org.neo4j.graphdb.factory.GraphDatabaseSetting.osIsWindows;
-import static org.neo4j.graphdb.factory.GraphDatabaseSettings.nodestore_mapped_memory_size;
-import static org.neo4j.graphdb.factory.GraphDatabaseSettings.mapped_memory_page_size;
 import static org.neo4j.graphdb.factory.GraphDatabaseSettings.all_stores_total_mapped_memory_size;
+import static org.neo4j.graphdb.factory.GraphDatabaseSettings.mapped_memory_page_size;
+import static org.neo4j.graphdb.factory.GraphDatabaseSettings.nodestore_mapped_memory_size;
+import static org.neo4j.helpers.collection.MapUtil.store;
 import static org.neo4j.helpers.collection.MapUtil.stringMap;
 import static org.neo4j.test.TargetDirectory.testDirForTest;
 
 import java.io.File;
 import java.util.Random;
 
-import org.hamcrest.Description;
-import org.hamcrest.Matcher;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.internal.matchers.TypeSafeMatcher;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
-import org.junit.runners.Suite;
 import org.neo4j.graphdb.factory.GraphDatabaseSettings;
 import org.neo4j.kernel.DefaultFileSystemAbstraction;
 import org.neo4j.kernel.DefaultIdGeneratorFactory;
@@ -50,66 +44,50 @@ import org.neo4j.kernel.DefaultTxHook;
 import org.neo4j.kernel.configuration.Config;
 import org.neo4j.kernel.configuration.ConfigurationDefaults;
 import org.neo4j.kernel.impl.nioneo.store.windowpool.ScanResistantWindowPoolFactory;
-import org.neo4j.kernel.impl.nioneo.store.windowpool.WindowPoolFactory;
 import org.neo4j.kernel.impl.util.StringLogger;
 import org.neo4j.test.TargetDirectory;
 
-@RunWith(Suite.class)
-@Suite.SuiteClasses({
-        TestRandomAccessMemoryMapping.MissDrivenRemap.class,
-        TestRandomAccessMemoryMapping.ScanResistant.class
-})
-@Ignore("to be replaced with more fine grained test")
-public abstract class TestRandomAccessMemoryMapping
+@Ignore("experimenting")
+public class PageTuningMatrixTest
 {
     @Test
-    public void shouldAchieveHitRationConsistentWithMappedRatioWhenAccessingRecordsRandomly() throws Exception
+    public void runWithDifferentPageSizes() throws Exception
     {
-        // when
+        int[] pagesSizes = new int[] {512, 1024, 2048, 4096, 8192, 16384};
+
+        for ( int pagesSize : pagesSizes )
+        {
+            measurePerformance(pagesSize);
+        }
+    }
+
+    private void measurePerformance( int pagesSize )
+    {
+        File storeDir = TargetDirectory.forTest( getClass() ).graphDbDir( true );
+
+        Config configuration = configTunedToMapAPreciseNumberOfRecords( storeDir, pagesSize );
+        Config config = configTunedToMapAPreciseNumberOfRecords( storeDir, 4096 );
+
+        String fileName = new File( storeDir, NeoStore.DEFAULT_NAME + ".nodestore.db" ).getPath();
+        createStore( fileName, TOTAL_RECORDS, config );
+
+        nodeStore = new NodeStore( fileName, configuration, new DefaultIdGeneratorFactory(),
+                new ScanResistantWindowPoolFactory( configuration ),
+                new DefaultFileSystemAbstraction(), StringLogger.SYSTEM );
+
+        long startTime = System.currentTimeMillis();
+
         Random random = new Random();
         for ( int i = 0; i < TOTAL_RECORDS; i++ )
         {
             nodeStore.getRecord( random.nextInt( TOTAL_RECORDS ) );
         }
 
-        // then
-        assertThat( nodeStore.getWindowPoolStats(), hasHitRatioGreaterThan( 0.4f ) );
-    }
+        long duration = System.currentTimeMillis() - startTime;
 
-    @Test
-    public void shouldAchieveHighHitRatioWhenScanningLinearly() throws Exception
-    {
-        // when
-        for ( int i = 0; i < TOTAL_RECORDS; i++ )
-        {
-            nodeStore.getRecord( i );
-        }
+        nodeStore.close();
 
-        // then
-        assertThat( nodeStore.getWindowPoolStats(), hasHitRatioGreaterThan( 0.8f ) );
-    }
-
-    @Rule
-    public TargetDirectory.TestDirectory store = testDirForTest( TestRandomAccessMemoryMapping.class );
-
-    @RunWith(JUnit4.class)
-    public static class MissDrivenRemap extends TestRandomAccessMemoryMapping
-    {
-        @Override
-        WindowPoolFactory windowPoolFactory()
-        {
-            return new DefaultWindowPoolFactory();
-        }
-    }
-
-    @RunWith(JUnit4.class)
-    public static class ScanResistant extends TestRandomAccessMemoryMapping
-    {
-        @Override
-        WindowPoolFactory windowPoolFactory()
-        {
-            return new ScanResistantWindowPoolFactory( configTunedToMapAPreciseNumberOfRecords( store.directory() ));
-        }
+        System.out.printf( "page size: %d, duration: %d%n", pagesSize, duration );
     }
 
     private static final int MEGA = 1024 * 1024;
@@ -119,54 +97,17 @@ public abstract class TestRandomAccessMemoryMapping
 
     private NodeStore nodeStore;
 
-    abstract WindowPoolFactory windowPoolFactory();
-
     @Before
     public void checkNotRunningOnWindowsBecauseMemoryMappingDoesNotWorkProperlyThere()
     {
         assumeTrue( !osIsWindows() );
     }
 
-    @Before
-    public void createStore()
-    {
-        // given
-        File storeDir = TargetDirectory.forTest( getClass() ).graphDbDir( true );
-        Config config = configTunedToMapAPreciseNumberOfRecords( storeDir );
-
-        String fileName = new File( storeDir, NeoStore.DEFAULT_NAME + ".nodestore.db" ).getPath();
-
-        createStore( fileName, TOTAL_RECORDS, config );
-
-        nodeStore = new NodeStore( fileName, config, new DefaultIdGeneratorFactory(),
-                windowPoolFactory(), new DefaultFileSystemAbstraction(), StringLogger.SYSTEM );
-    }
-
-
-    private Matcher<WindowPoolStats> hasHitRatioGreaterThan( final float ratio )
-    {
-        return new TypeSafeMatcher<WindowPoolStats>()
-        {
-            @Override
-            public boolean matchesSafely( WindowPoolStats stats )
-            {
-                System.out.println( stats );
-                return stats.getHitCount() > TOTAL_RECORDS * ratio;
-            }
-
-            @Override
-            public void describeTo( Description description )
-            {
-                description.appendText( "hitCount > " ).appendValue( TOTAL_RECORDS * ratio );
-            }
-        };
-    }
-
-    private static Config configTunedToMapAPreciseNumberOfRecords( File storeDir )
+    private static Config configTunedToMapAPreciseNumberOfRecords( File storeDir, int pageSize )
     {
         return new Config( new ConfigurationDefaults( GraphDatabaseSettings.class ).apply( stringMap(
                     nodestore_mapped_memory_size.name(), mmapSize( MAPPED_RECORDS, NodeStore.RECORD_SIZE ),
-                    mapped_memory_page_size.name(), "1K",
+                    mapped_memory_page_size.name(), pageSize + "",
                     all_stores_total_mapped_memory_size.name(), mmapSize( MAPPED_RECORDS, NodeStore.RECORD_SIZE ),
                     NodeStore.Configuration.use_memory_mapped_buffers.name(), "true",
                     NodeStore.Configuration.store_dir.name(), storeDir.getPath(),
