@@ -20,6 +20,7 @@
 package org.neo4j.kernel.impl.nioneo.store.windowpool;
 
 import static java.lang.String.format;
+import static org.neo4j.kernel.impl.nioneo.store.WindowPoolStats.extractName;
 
 import java.io.IOException;
 
@@ -33,6 +34,7 @@ import org.neo4j.kernel.impl.nioneo.store.paging.PageReplacementStrategy;
 public class ScanResistantWindowPool implements WindowPool,
         PageReplacementStrategy.Storage<PersistenceWindow, WindowPage>
 {
+    public static final int REPORT_INTERVAL = 100000;
     private final String storeFileName;
     private final FileMapper fileMapper;
     private final PageReplacementStrategy replacementStrategy;
@@ -114,6 +116,29 @@ public class ScanResistantWindowPool implements WindowPool,
         {
             throw new UnderlyingStorageException( "Unable to load position["
                     + position + "] @[" + position * bytesPerRecord + "]", e );
+        }
+        finally
+        {
+            reportStats();
+        }
+    }
+
+    private int lastMapCount;
+    private long lastReportTime = System.currentTimeMillis();
+
+    private void reportStats()
+    {
+        if ( acquireCount % REPORT_INTERVAL == 0 )
+        {
+            int deltaMapCount = mapCount - lastMapCount;
+            lastMapCount = mapCount;
+            long currentTime = System.currentTimeMillis();
+            long deltaTime = currentTime - lastReportTime;
+            lastReportTime = currentTime;
+
+            System.out.printf( "In %s: %d pages acquired, %d pages mapped (%.2f%%) in %d ms%n",
+                    extractName( storeFileName ), REPORT_INTERVAL, deltaMapCount,
+                    (100.0 * deltaMapCount) / REPORT_INTERVAL, deltaTime );
         }
     }
 

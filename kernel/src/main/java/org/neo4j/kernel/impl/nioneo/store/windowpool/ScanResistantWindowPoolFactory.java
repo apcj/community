@@ -33,12 +33,12 @@ import org.neo4j.kernel.impl.util.StringLogger;
 public class ScanResistantWindowPoolFactory implements WindowPoolFactory
 {
     private final int targetBytesPerPage;
-    private final int pageCapacity;
+    private final Cart cart;
 
     public ScanResistantWindowPoolFactory( Config configuration )
     {
         this.targetBytesPerPage = pageSize( configuration );
-        this.pageCapacity = mappablePages( configuration, targetBytesPerPage );
+        this.cart = new Cart( mappablePages( configuration, targetBytesPerPage ) );
     }
 
     private static int pageSize( Config configuration )
@@ -70,7 +70,7 @@ public class ScanResistantWindowPoolFactory implements WindowPoolFactory
         try
         {
             return new ScanResistantWindowPool( storageFileName, recordSize, targetBytesPerPage,
-                    new FileMapper( fileChannel ), new Cart( pageCapacity ) );
+                    new FileMapper( fileChannel ), cart );
         }
         catch ( IOException e )
         {
