@@ -50,9 +50,15 @@ public class AutoconfIT
         Map<Class<? extends Store>, Long> configForEmptyDb = getConfigForDb( storeDir );
         createBigDb( storeDir );
         Map<Class<? extends Store>, Long> configForBigDb = getConfigForDb( storeDir );
-        for ( Map.Entry<Class<? extends Store>, Long> entry : configForEmptyDb.entrySet() )
-            assertTrue( configForBigDb.get( entry.getKey() ).longValue() > entry.getValue().longValue() );
-        
+        for ( Map.Entry<Class<? extends Store>, Long> entry : configForEmptyDb.entrySet() ) {
+
+            long bigDbValue = configForBigDb.get( entry.getKey() );
+            long emptyDbValue = entry.getValue();
+            assertTrue( String.format( "%s: %d should be greater than %d",
+                                       entry.getKey(), bigDbValue, emptyDbValue ),
+                        bigDbValue > emptyDbValue );
+        }
+
         long specificNodeBytes = 1234567;
         Map<Class<? extends Store>, Long> configForSpecific = getConfigForDb( storeDir,
                 stringMap( "neostore.nodestore.db.mapped_memory", "" + specificNodeBytes ) );
