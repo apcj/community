@@ -29,10 +29,12 @@ import static org.neo4j.helpers.collection.MapUtil.genericMap;
 import static org.neo4j.helpers.collection.MapUtil.stringMap;
 import static org.neo4j.test.TargetDirectory.forTest;
 
+import java.lang.management.ManagementFactory;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.junit.Test;
+import org.neo4j.kernel.AutoConfigurator;
 import org.neo4j.kernel.EmbeddedGraphDatabase;
 import org.neo4j.kernel.configuration.Config;
 import org.neo4j.kernel.impl.batchinsert.BatchInserter;
@@ -68,9 +70,15 @@ public class AutoconfIT
     private void createBigDb( String storeDir )
     {
         BatchInserter inserter = new BatchInserterImpl( storeDir );
+        long physicalMemory = AutoConfigurator.physicalMemory();
+        long highNode = 100000000;
+        if ( physicalMemory != -1 )
+        {
+            highNode = Math.max( highNode, highNode * (physicalMemory / 16 / 1024 / 1024 / 1024) );
+        }
         try
         {
-            inserter.createNode( 100000000, null );
+            inserter.createNode( highNode, null );
         }
         finally
         {
@@ -111,7 +119,10 @@ public class AutoconfIT
         {
             line = line.trim();
             int equalIndex = line.indexOf( '=' );
-            if ( equalIndex <= 0 ) continue;
+            if ( equalIndex <= 0 )
+            {
+                continue;
+            }
             map.put( line.substring( 0, equalIndex ).trim(), line.substring( equalIndex+1, line.length() ).trim() );
         }
         return map;
@@ -120,7 +131,10 @@ public class AutoconfIT
     private long asBytes( Map<String, String> readConfig, String key )
     {
         String conf = readConfig.get( key );
-        if ( conf == null ) return 0;
+        if ( conf == null )
+        {
+            return 0;
+        }
         int factor = 1;
         char lastChar = conf.charAt( conf.length()-1 );
         if ( !isDigit( lastChar ) )
