@@ -34,11 +34,15 @@ public class ScanResistantWindowPoolFactory implements WindowPoolFactory
 {
     private final int targetBytesPerPage;
     private final Cart cart;
+    private final int reportingInterval;
+    private final MappingStatisticsListener statisticsListener;
 
-    public ScanResistantWindowPoolFactory( Config configuration )
+    public ScanResistantWindowPoolFactory( Config configuration, StringLogger logger )
     {
         this.targetBytesPerPage = pageSize( configuration );
         this.cart = new Cart( mappablePages( configuration, targetBytesPerPage ) );
+        this.reportingInterval = configuration.get( GraphDatabaseSettings.log_mapped_memory_stats_interval );
+        this.statisticsListener = createStatisticsListener( configuration, logger );
     }
 
     private static int pageSize( Config configuration )
@@ -63,6 +67,21 @@ public class ScanResistantWindowPoolFactory implements WindowPoolFactory
         return (int) pageCount;
     }
 
+    private MappingStatisticsListener createStatisticsListener( Config configuration, StringLogger logger )
+    {
+        if (configuration.get( GraphDatabaseSettings.log_mapped_memory_stats )) {
+            return new LoggingStatisticsListener( logger );
+        } else {
+            return new MappingStatisticsListener() {
+                @Override
+                public void onStatistics( String storeFileName, int acquiredPages, int mappedPages, long samplePeriod )
+                {
+                    // silent
+                }
+            };
+        }
+    }
+
     @Override
     public WindowPool create( String storageFileName, int recordSize, FileChannel fileChannel,
                               Config configuration, StringLogger log )
@@ -70,7 +89,7 @@ public class ScanResistantWindowPoolFactory implements WindowPoolFactory
         try
         {
             return new ScanResistantWindowPool( storageFileName, recordSize, targetBytesPerPage,
-                    new FileMapper( fileChannel ), cart );
+                    new FileMapper( fileChannel ), cart, reportingInterval, statisticsListener );
         }
         catch ( IOException e )
         {

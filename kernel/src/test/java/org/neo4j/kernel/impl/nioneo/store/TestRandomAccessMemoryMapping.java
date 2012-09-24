@@ -108,7 +108,8 @@ public abstract class TestRandomAccessMemoryMapping
         @Override
         WindowPoolFactory windowPoolFactory()
         {
-            return new ScanResistantWindowPoolFactory( configTunedToMapAPreciseNumberOfRecords( store.directory() ));
+            return new ScanResistantWindowPoolFactory(
+                    configTunedToMapAPreciseNumberOfRecords( store.directory() ), StringLogger.DEV_NULL );
         }
     }
 

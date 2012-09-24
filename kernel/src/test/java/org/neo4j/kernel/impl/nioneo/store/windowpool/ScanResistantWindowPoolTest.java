@@ -19,10 +19,7 @@
  */
 package org.neo4j.kernel.impl.nioneo.store.windowpool;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -42,7 +39,7 @@ public class ScanResistantWindowPoolTest
         int targetBytesPerPage = 1000;
         FileMapper fileMapper = mock( FileMapper.class );
         ScanResistantWindowPool pool = new ScanResistantWindowPool( "storeFileName", bytesPerRecord, targetBytesPerPage,
-                fileMapper, new StubPageReplacementStrategy() );
+                fileMapper, new StubPageReplacementStrategy(), 100000, mock( MappingStatisticsListener.class ) );
 
         // when
         pool.acquire( 0, OperationType.READ );
@@ -68,7 +65,7 @@ public class ScanResistantWindowPoolTest
         try
         {
             new ScanResistantWindowPool( "storeFileName", bytesPerRecord, targetBytesPerPage,
-                    mock( FileMapper.class ), mock( PageReplacementStrategy.class ) );
+                    mock( FileMapper.class ), mock( PageReplacementStrategy.class ), 100000, mock( MappingStatisticsListener.class ) );
             fail( "should have thrown exception" );
         }
         // then
@@ -85,7 +82,7 @@ public class ScanResistantWindowPoolTest
         try
         {
             new ScanResistantWindowPool( "storeFileName", 0, 4096,
-                    mock( FileMapper.class ), mock( PageReplacementStrategy.class ) );
+                    mock( FileMapper.class ), mock( PageReplacementStrategy.class ), 100000, mock( MappingStatisticsListener.class ) );
             fail( "should have thrown exception" );
         }
         // then
@@ -108,7 +105,7 @@ public class ScanResistantWindowPoolTest
         try
         {
             new ScanResistantWindowPool( "storeFileName", bytesPerRecord, targetBytesPerPage,
-                    fileMapper, mock( PageReplacementStrategy.class ) );
+                    fileMapper, mock( PageReplacementStrategy.class ), 100000, mock( MappingStatisticsListener.class ) );
             fail( "should have thrown exception" );
         }
         // then
@@ -124,7 +121,7 @@ public class ScanResistantWindowPoolTest
         int recordSize = 9;
         int targetBytesPerPage = 4096;
         ScanResistantWindowPool pool = new ScanResistantWindowPool( "storeFileName", recordSize, targetBytesPerPage,
-                mock( FileMapper.class ), mock( PageReplacementStrategy.class ) );
+                mock( FileMapper.class ), mock( PageReplacementStrategy.class ), 100000, mock( MappingStatisticsListener.class ) );
 
         // when
         try
@@ -151,7 +148,7 @@ public class ScanResistantWindowPoolTest
         MappedWindow window1 = mock( MappedWindow.class );
         when( fileMapper.mapWindow(  100, 100, 10  ) ).thenReturn( window1 );
         ScanResistantWindowPool pool = new ScanResistantWindowPool( "storeFileName", bytesPerRecord, targetBytesPerPage,
-                fileMapper, new StubPageReplacementStrategy() );
+                fileMapper, new StubPageReplacementStrategy(), 100000, mock( MappingStatisticsListener.class ) );
 
         pool.acquire( 0, OperationType.READ );
         pool.acquire( 100, OperationType.READ );

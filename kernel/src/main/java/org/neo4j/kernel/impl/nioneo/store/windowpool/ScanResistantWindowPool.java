@@ -34,26 +34,30 @@ import org.neo4j.kernel.impl.nioneo.store.paging.PageReplacementStrategy;
 public class ScanResistantWindowPool implements WindowPool,
         PageReplacementStrategy.Storage<PersistenceWindow, WindowPage>
 {
-    public static final int REPORT_INTERVAL = 100000;
     private final String storeFileName;
     private final FileMapper fileMapper;
     private final PageReplacementStrategy replacementStrategy;
     private final int bytesPerRecord;
     private final int recordsPerPage;
-    private WindowPage[] pages = new WindowPage[0];
+    private final int reportInterval;
+    private final MappingStatisticsListener statisticsListener;
 
+    private WindowPage[] pages = new WindowPage[0];
     private int acquireCount = 0;
     private int mapCount = 0;
 
     public ScanResistantWindowPool( String storeFileName, int bytesPerRecord, int targetBytesPerPage,
-                                    FileMapper fileMapper, PageReplacementStrategy replacementStrategy )
+                                    FileMapper fileMapper, PageReplacementStrategy replacementStrategy,
+                                    int reportInterval, MappingStatisticsListener statisticsListener )
             throws IOException
     {
         this.storeFileName = storeFileName;
         this.bytesPerRecord = bytesPerRecord;
         this.fileMapper = fileMapper;
         this.replacementStrategy = replacementStrategy;
+        this.statisticsListener = statisticsListener;
         this.recordsPerPage = calculateNumberOfRecordsPerPage( bytesPerRecord, targetBytesPerPage );
+        this.reportInterval = reportInterval;
         this.setupPages();
     }
 
@@ -128,7 +132,7 @@ public class ScanResistantWindowPool implements WindowPool,
 
     private void reportStats()
     {
-        if ( acquireCount % REPORT_INTERVAL == 0 )
+        if ( acquireCount % reportInterval == 0 )
         {
             int deltaMapCount = mapCount - lastMapCount;
             lastMapCount = mapCount;
@@ -136,9 +140,8 @@ public class ScanResistantWindowPool implements WindowPool,
             long deltaTime = currentTime - lastReportTime;
             lastReportTime = currentTime;
 
-            System.out.printf( "In %s: %d pages acquired, %d pages mapped (%.2f%%) in %d ms%n",
-                    extractName( storeFileName ), REPORT_INTERVAL, deltaMapCount,
-                    (100.0 * deltaMapCount) / REPORT_INTERVAL, deltaTime );
+            statisticsListener.onStatistics(
+                    extractName( storeFileName ), reportInterval, deltaMapCount, deltaTime );
         }
     }
 

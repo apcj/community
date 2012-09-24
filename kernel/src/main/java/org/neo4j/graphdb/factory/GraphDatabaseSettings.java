@@ -176,6 +176,14 @@ public abstract class GraphDatabaseSettings
     @Default("500M")
     public static final GraphDatabaseSetting<Long> all_stores_total_mapped_memory_size = new NumberOfBytesSetting("all_stores_total_mapped_memory_size");
 
+    @Description( "Tell Neo4j to regularly log memory mapping statistics." )
+    @Default("false")
+    public static final GraphDatabaseSetting<Boolean> log_mapped_memory_stats = new BooleanSetting("log_mapped_memory_stats");
+
+    @Description( "The number of records to be loaded between regular logging of memory mapping statistics." )
+    @Default("1000000")
+    public static final GraphDatabaseSetting<Integer> log_mapped_memory_stats_interval = new IntegerSetting("log_mapped_memory_stats_interval", "Must be a number");
+
     @Description( "The size to allocate for memory mapping the node store." )
     @Default("20M")
     public static final Setting nodestore_mapped_memory_size = new NumberOfBytesSetting("neostore.nodestore.db.mapped_memory");

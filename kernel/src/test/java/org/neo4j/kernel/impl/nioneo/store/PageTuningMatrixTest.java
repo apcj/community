@@ -70,7 +70,7 @@ public class PageTuningMatrixTest
         createStore( fileName, TOTAL_RECORDS, config );
 
         nodeStore = new NodeStore( fileName, configuration, new DefaultIdGeneratorFactory(),
-                new ScanResistantWindowPoolFactory( configuration ),
+                new ScanResistantWindowPoolFactory( configuration, StringLogger.DEV_NULL ),
                 new DefaultFileSystemAbstraction(), StringLogger.SYSTEM );
 
         long startTime = System.currentTimeMillis();
