@@ -21,6 +21,7 @@ package org.neo4j.kernel.impl.nioneo.store.windowpool;
 
 import static java.lang.String.format;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 
@@ -69,17 +70,26 @@ public class ScanResistantWindowPoolFactory implements WindowPoolFactory
 
     private MappingStatisticsListener createStatisticsListener( Config configuration, StringLogger logger )
     {
-        if (configuration.get( GraphDatabaseSettings.log_mapped_memory_stats )) {
-            return new LoggingStatisticsListener( logger );
-        } else {
-            return new MappingStatisticsListener() {
-                @Override
-                public void onStatistics( String storeFileName, int acquiredPages, int mappedPages, long samplePeriod )
-                {
-                    // silent
-                }
-            };
+        if ( configuration.get( GraphDatabaseSettings.log_mapped_memory_stats ) )
+        {
+            try
+            {
+                return new LoggingStatisticsListener(
+                        configuration.get( GraphDatabaseSettings.log_mapped_memory_stats_filename ) );
+            }
+            catch ( FileNotFoundException e )
+            {
+                logger.logMessage( "Unable to create logger for mapped memory statistics; will be silent", e );
+            }
         }
+        return new MappingStatisticsListener()
+        {
+            @Override
+            public void onStatistics( String storeFileName, int acquiredPages, int mappedPages, long samplePeriod )
+            {
+                // silent
+            }
+        };
     }
 
     @Override

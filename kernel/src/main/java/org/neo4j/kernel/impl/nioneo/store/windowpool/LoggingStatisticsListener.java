@@ -19,23 +19,28 @@
  */
 package org.neo4j.kernel.impl.nioneo.store.windowpool;
 
-import org.neo4j.kernel.impl.util.StringLogger;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.PrintWriter;
+
+import org.neo4j.helpers.Format;
 
 public class LoggingStatisticsListener implements MappingStatisticsListener
 {
-    private final StringLogger logger;
+    private final PrintWriter logWriter;
 
-    public LoggingStatisticsListener( StringLogger logger )
+    public LoggingStatisticsListener( String fileName ) throws FileNotFoundException
     {
-        this.logger = logger;
+        this.logWriter = new PrintWriter( new FileOutputStream( fileName, true ) );
     }
 
     @Override
     public void onStatistics( String storeFileName, int acquiredPages, int mappedPages, long
             samplePeriod )
     {
-        logger.logMessage( String.format( "In %s: %d pages acquired, %d pages mapped (%.2f%%) in %d ms",
-                storeFileName, acquiredPages, mappedPages,
-                (100.0 * mappedPages) / acquiredPages, samplePeriod ) );
+        logWriter.printf( "%s: In %s: %d pages acquired, %d pages mapped (%.2f%%) in %d ms%n",
+                Format.date(), storeFileName, acquiredPages, mappedPages,
+                (100.0 * mappedPages) / acquiredPages, samplePeriod );
+        logWriter.flush();
     }
 }

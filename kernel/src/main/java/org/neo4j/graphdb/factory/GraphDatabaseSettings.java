@@ -102,6 +102,19 @@ public abstract class GraphDatabaseSettings
     @Description( "Enable this to specify a parser other than the default one." )
     public static final OptionsSetting cypher_parser_version = new CypherParserSetting();
 
+    // Store files
+
+    @Description("The directory where the database files are located.")
+    public static final GraphDatabaseSetting.DirectorySetting store_dir = new GraphDatabaseSetting.DirectorySetting( "store_dir", true, true);
+
+    @Description("The base name for the Neo4j Store files, either an absolute path or relative to the store_dir setting. This should generally not be changed.")
+    @Default("neostore")
+    public static final GraphDatabaseSetting.FileSetting neo_store = new GraphDatabaseSetting.FileSetting( "neo_store", store_dir, true, true);
+
+    @Description("The base name for the logical log files, either an absolute path or relative to the store_dir setting. This should generally not be changed.")
+    @Default("nioneo_logical.log")
+    public static final GraphDatabaseSetting.FileSetting logical_log = new GraphDatabaseSetting.FileSetting( "logical_log", store_dir, true, true);
+
     // Remote logging
     @Description( "Whether to enable logging to a remote server or not." )
     @Default(FALSE)
@@ -179,6 +192,10 @@ public abstract class GraphDatabaseSettings
     @Description( "Tell Neo4j to regularly log memory mapping statistics." )
     @Default("false")
     public static final GraphDatabaseSetting<Boolean> log_mapped_memory_stats = new BooleanSetting("log_mapped_memory_stats");
+
+    @Description("The file where Neo4j will record memory mapping statistics.")
+    @Default("mapped_memory_stats.log")
+    public static final GraphDatabaseSetting.FileSetting log_mapped_memory_stats_filename = new GraphDatabaseSetting.FileSetting( "log_mapped_memory_stats_filename", store_dir, true, true );
 
     @Description( "The number of records to be loaded between regular logging of memory mapping statistics." )
     @Default("1000000")
@@ -310,19 +327,6 @@ public abstract class GraphDatabaseSettings
     @Default( "200ms" )
     @Deprecated
     public static StringSetting gc_monitor_threshold = new StringSetting( "gc_monitor_threshold", GraphDatabaseSetting.ANY, "Must be non-empty." );
-
-    // Store files
-
-    @Description("The directory where the database files are located.")
-    public static final GraphDatabaseSetting.DirectorySetting store_dir = new GraphDatabaseSetting.DirectorySetting( "store_dir", true, true);
-
-    @Description("The base name for the Neo4j Store files, either an absolute path or relative to the store_dir setting. This should generally not be changed.")
-    @Default("neostore")
-    public static final GraphDatabaseSetting.FileSetting neo_store = new GraphDatabaseSetting.FileSetting( "neo_store", store_dir, true, true);
-
-    @Description("The base name for the logical log files, either an absolute path or relative to the store_dir setting. This should generally not be changed.")
-    @Default("nioneo_logical.log")
-    public static final GraphDatabaseSetting.FileSetting logical_log = new GraphDatabaseSetting.FileSetting( "logical_log", store_dir, true, true);
 
     // Old GCR size settings, using string values
 
